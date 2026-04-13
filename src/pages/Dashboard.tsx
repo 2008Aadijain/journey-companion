@@ -218,6 +218,22 @@ const Dashboard = () => {
     findMatch();
   }, [user, profile]);
 
+  // Check if GoalMate is inactive (3+ days)
+  useEffect(() => {
+    if (!matchProfile) return;
+    const checkInactive = async () => {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const { count } = await supabase
+        .from("check_ins")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", matchProfile.user_id)
+        .gte("created_at", threeDaysAgo.toISOString());
+      setMateInactive(count === 0);
+    };
+    checkInactive();
+  }, [matchProfile]);
+
   useEffect(() => {
     if (!match || !user) return;
     const countUnread = async () => {
