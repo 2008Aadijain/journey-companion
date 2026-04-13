@@ -4,6 +4,7 @@ import { ArrowLeft, Trophy, Lock, Flame } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import BottomNav from "@/components/BottomNav";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -56,7 +57,7 @@ const Leaderboard = () => {
         </div>
       </header>
 
-      <main className="px-4 py-5 max-w-lg mx-auto">
+      <main className="px-4 py-5 max-w-lg mx-auto pb-24">
         {isLocked ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4"
@@ -125,6 +126,7 @@ const Leaderboard = () => {
           </div>
         )}
       </main>
+      <BottomNav />
     </div>
   );
 };

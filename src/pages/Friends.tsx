@@ -393,6 +393,7 @@ const Friends = () => {
           )
         )}
       </main>
+      <BottomNav />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Flame, Trophy, Share2, LogOut, Zap, Camera } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import BottomNav from "@/components/BottomNav";
 
 interface Achievement {
   id: string;
@@ -126,7 +127,7 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="px-4 py-6 max-w-lg mx-auto space-y-5">
+      <main className="px-4 py-6 max-w-lg mx-auto space-y-5 pb-24">
         {/* Profile Card */}
         <div className="glass-card-glow p-6 text-center">
           <div className="relative w-20 h-20 mx-auto mb-4">
@@ -219,6 +220,7 @@ const Profile = () => {
           </div>
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 };
