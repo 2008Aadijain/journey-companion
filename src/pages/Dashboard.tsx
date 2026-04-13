@@ -90,6 +90,11 @@ const Dashboard = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [checkInDates, setCheckInDates] = useState<string[]>([]);
   const [pendingFriendCount, setPendingFriendCount] = useState(0);
+  const [xpGainAmount, setXpGainAmount] = useState(0);
+  const [showXpAnimation, setShowXpAnimation] = useState(false);
+  const [mateInactive, setMateInactive] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState("Beginner");
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
@@ -285,6 +290,11 @@ const Dashboard = () => {
     const newStreak = profile.streak + 1;
     const photoBonus = photoUrl ? 5 : 0;
     const xpGain = 10 + photoBonus + (newStreak % 7 === 0 ? 50 : 0) + (newStreak === 30 ? 200 : 0);
+    
+    // Show XP animation
+    setXpGainAmount(xpGain);
+    setShowXpAnimation(true);
+    
     setTodayCheckedIn(true);
     await supabase.from("check_ins").insert({
       user_id: user.id, user_name: profile.name, goal_category: profile.goal_category,
@@ -298,6 +308,18 @@ const Dashboard = () => {
       xp: (profile.xp ?? 0) + xpGain,
     }).eq("user_id", user.id);
     refreshProfile();
+
+    // Level up check (every 30 days)
+    if (newStreak > 0 && newStreak % 30 === 0) {
+      const level = newStreak <= 30 ? "Intermediate" : newStreak <= 60 ? "Advanced" : "Master";
+      setCurrentLevel(level);
+      setShowLevelUp(true);
+      // Award level up XP
+      await supabase.from("profiles").update({
+        xp: (profile.xp ?? 0) + xpGain + 300,
+      }).eq("user_id", user.id);
+      setTimeout(() => setShowLevelUp(false), 4000);
+    }
   };
 
   const handleTaskComplete = () => { if (!taskComplete) setTaskComplete(true); };
