@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Particles from "@/components/Particles";
 import { presetGoals } from "@/data/roadmaps";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,9 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 
 const GoalSetup = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile, loading, signUp, signIn } = useAuth();
   const { toast } = useToast();
-  const [step, setStep] = useState<"goal" | "custom" | "deadline" | "signup" | "login">("goal");
+  const [step, setStep] = useState<"goal" | "custom" | "deadline" | "signup" | "login">(
+    searchParams.get("login") === "true" ? "login" : "goal"
+  );
   const [selectedGoal, setSelectedGoal] = useState<{ id: string; label: string; emoji: string; category?: string } | null>(null);
   const [customGoal, setCustomGoal] = useState("");
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
