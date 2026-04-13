@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Users, Plus, Check, X, Flame, MessageCircle } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Users, Plus, Check, X, Flame, MessageCircle, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import BottomNav from "@/components/BottomNav";
+import XpAnimation from "@/components/XpAnimation";
 
 type Tab = "friends" | "requests" | "groups";
 
@@ -45,6 +47,8 @@ const Friends = () => {
   const [groupName, setGroupName] = useState("");
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [xpGain, setXpGain] = useState(0);
+  const [showXp, setShowXp] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/goal-setup");
@@ -108,7 +112,25 @@ const Friends = () => {
 
   const acceptRequest = async (requestId: string) => {
     await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", requestId);
+    // Award XP for accepting friend
+    if (user && profile) {
+      await supabase.from("profiles").update({ xp: (profile.xp ?? 0) + 5 }).eq("user_id", user.id);
+      setXpGain(5);
+      setShowXp(true);
+    }
     loadData();
+  };
+
+  const cheerFriend = async (friendId: string) => {
+    if (!user || !profile) return;
+    // Award +2 XP to both
+    await supabase.from("profiles").update({ xp: (profile.xp ?? 0) + 2 }).eq("user_id", user.id);
+    const { data: friendProfile } = await supabase.from("profiles").select("xp").eq("user_id", friendId).single();
+    if (friendProfile) {
+      await supabase.from("profiles").update({ xp: (friendProfile.xp ?? 0) + 2 }).eq("user_id", friendId);
+    }
+    setXpGain(2);
+    setShowXp(true);
   };
 
   const rejectRequest = async (requestId: string) => {
@@ -160,6 +182,7 @@ const Friends = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <XpAnimation amount={xpGain} show={showXp} onDone={() => setShowXp(false)} />
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
           <div className="flex items-center gap-3">
@@ -298,6 +321,11 @@ const Friends = () => {
                     <span className="text-xs text-secondary font-bold">{f.streak}</span>
                   </div>
                 </div>
+                <button onClick={() => cheerFriend(f.user_id)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all glass-card text-muted-foreground hover:text-primary hover:bg-primary/10">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Cheer
+                </button>
               </div>
             ))
           )
@@ -365,6 +393,7 @@ const Friends = () => {
           )
         )}
       </main>
+      <BottomNav />
     </div>
   );
 };

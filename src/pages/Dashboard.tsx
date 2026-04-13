@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X } from "lucide-react";
+import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle } from "lucide-react";
 import { getDayTask } from "@/data/roadmaps";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import ProgressGraph from "@/components/ProgressGraph";
 import SettingsPanel from "@/components/SettingsPanel";
+import BottomNav from "@/components/BottomNav";
+import XpAnimation from "@/components/XpAnimation";
 
 const MOTIVATION_QUOTES = [
   "Small steps every day lead to big results. 🚀",
@@ -88,6 +90,11 @@ const Dashboard = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [checkInDates, setCheckInDates] = useState<string[]>([]);
   const [pendingFriendCount, setPendingFriendCount] = useState(0);
+  const [xpGainAmount, setXpGainAmount] = useState(0);
+  const [showXpAnimation, setShowXpAnimation] = useState(false);
+  const [mateInactive, setMateInactive] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState("Beginner");
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
@@ -211,6 +218,22 @@ const Dashboard = () => {
     findMatch();
   }, [user, profile]);
 
+  // Check if GoalMate is inactive (3+ days)
+  useEffect(() => {
+    if (!matchProfile) return;
+    const checkInactive = async () => {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const { count } = await supabase
+        .from("check_ins")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", matchProfile.user_id)
+        .gte("created_at", threeDaysAgo.toISOString());
+      setMateInactive(count === 0);
+    };
+    checkInactive();
+  }, [matchProfile]);
+
   useEffect(() => {
     if (!match || !user) return;
     const countUnread = async () => {
@@ -283,6 +306,11 @@ const Dashboard = () => {
     const newStreak = profile.streak + 1;
     const photoBonus = photoUrl ? 5 : 0;
     const xpGain = 10 + photoBonus + (newStreak % 7 === 0 ? 50 : 0) + (newStreak === 30 ? 200 : 0);
+    
+    // Show XP animation
+    setXpGainAmount(xpGain);
+    setShowXpAnimation(true);
+    
     setTodayCheckedIn(true);
     await supabase.from("check_ins").insert({
       user_id: user.id, user_name: profile.name, goal_category: profile.goal_category,
@@ -296,6 +324,18 @@ const Dashboard = () => {
       xp: (profile.xp ?? 0) + xpGain,
     }).eq("user_id", user.id);
     refreshProfile();
+
+    // Level up check (every 30 days)
+    if (newStreak > 0 && newStreak % 30 === 0) {
+      const level = newStreak <= 30 ? "Intermediate" : newStreak <= 60 ? "Advanced" : "Master";
+      setCurrentLevel(level);
+      setShowLevelUp(true);
+      // Award level up XP
+      await supabase.from("profiles").update({
+        xp: (profile.xp ?? 0) + xpGain + 300,
+      }).eq("user_id", user.id);
+      setTimeout(() => setShowLevelUp(false), 4000);
+    }
   };
 
   const handleTaskComplete = () => { if (!taskComplete) setTaskComplete(true); };
@@ -319,6 +359,24 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background relative">
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onLogout={handleLogout} />
+      <XpAnimation amount={xpGainAmount} show={showXpAnimation} onDone={() => setShowXpAnimation(false)} />
+
+      {/* Level Up Celebration */}
+      {showLevelUp && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="text-center animate-in zoom-in duration-500">
+            <div className="text-7xl mb-4">🎉</div>
+            <h2 className="text-3xl font-black text-gradient-hero mb-2">Level Up!</h2>
+            <p className="text-xl font-bold text-primary">{currentLevel} Unlocked</p>
+            <p className="text-muted-foreground text-sm mt-2">+300 XP Bonus! New 30-day roadmap awaits 🚀</p>
+            <button onClick={() => setShowLevelUp(false)}
+              className="mt-6 px-8 py-3 rounded-full text-sm font-bold text-primary-foreground"
+              style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+              Let's Go! 💪
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -543,6 +601,53 @@ const Dashboard = () => {
                     </span>
                   )}
                 </button>
+
+                {/* Rematch warning */}
+                {mateInactive && (
+                  <div className="mt-3 p-3 rounded-xl border border-secondary/30" style={{ background: 'hsla(25, 80%, 50%, 0.08)' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-4 h-4 text-secondary" />
+                      <p className="text-xs font-bold text-secondary">Your GoalMate seems inactive 😴</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setMateInactive(false)}
+                        className="flex-1 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
+                        Keep Waiting
+                      </button>
+                      <button onClick={async () => {
+                        if (!match || !user || !profile) return;
+                        await supabase.from("matches").update({ status: "archived" }).eq("id", match.id);
+                        setMatch(null);
+                        setMatchProfile(null);
+                        setMateInactive(false);
+                        // Trigger re-match
+                        const { data: candidates } = await supabase
+                          .from("profiles").select("*")
+                          .eq("goal_category", profile.goal_category)
+                          .neq("user_id", user.id).limit(10);
+                        if (candidates) {
+                          for (const c of candidates) {
+                            if (c.user_id === match.user1_id || c.user_id === match.user2_id) continue;
+                            const { data: existing } = await supabase.from("matches").select("id")
+                              .or(`user1_id.eq.${c.user_id},user2_id.eq.${c.user_id}`)
+                              .eq("status", "active").limit(1).maybeSingle();
+                            if (!existing) {
+                              const { data: newMatch } = await supabase.from("matches")
+                                .insert({ user1_id: user.id, user2_id: c.user_id, goal_category: profile.goal_category })
+                                .select().single();
+                              if (newMatch) { setMatch(newMatch); setMatchProfile(c); }
+                              break;
+                            }
+                          }
+                        }
+                      }}
+                        className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
+                        style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                        Find New Mate
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
@@ -649,30 +754,7 @@ const Dashboard = () => {
         <div className="h-24" />
       </main>
 
-      {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-around max-w-lg mx-auto py-2.5">
-          {[
-            { icon: Target, label: "Home", path: "/dashboard", active: true },
-            { icon: Globe, label: "Wall", path: "/progress-wall", active: false },
-            { icon: Users, label: "Friends", path: "/friends", active: false, badge: pendingFriendCount },
-            { icon: Trophy, label: "Rank", path: "/leaderboard", active: false },
-            { icon: User, label: "Profile", path: "/profile", active: false },
-          ].map((item) => (
-            <button key={item.label} onClick={() => navigate(item.path)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1.5 transition-colors relative"
-            >
-              <item.icon className={cn("w-5 h-5", item.active ? "text-primary" : "text-muted-foreground/60")} />
-              <span className={cn("text-[10px] font-bold", item.active ? "text-primary" : "text-muted-foreground/60")}>{item.label}</span>
-              {item.badge && item.badge > 0 && (
-                <span className="absolute -top-0.5 right-0 w-4 h-4 rounded-full bg-secondary text-secondary-foreground text-[8px] font-bold flex items-center justify-center">
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </nav>
+      <BottomNav />
     </div>
   );
 };

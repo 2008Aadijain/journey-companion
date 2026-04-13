@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, HandMetal, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import BottomNav from "@/components/BottomNav";
 
 interface CheckIn {
   id: string;
@@ -142,7 +143,7 @@ const ProgressWall = () => {
         )}
       </header>
 
-      <main className="px-4 py-4 max-w-lg mx-auto space-y-3">
+      <main className="px-4 py-4 max-w-lg mx-auto space-y-3 pb-24">
         {checkIns.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">📝</div>
@@ -194,6 +195,7 @@ const ProgressWall = () => {
           ))
         )}
       </main>
+      <BottomNav />
     </div>
   );
 };

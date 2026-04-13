@@ -63,6 +63,13 @@ const Index = () => {
           Start Your Journey →
         </button>
 
+        <button
+          onClick={() => navigate("/goal-setup?login=true")}
+          className="mt-3 text-sm text-primary hover:text-primary/80 font-semibold transition-colors fade-up fade-up-delay-3"
+        >
+          Already have an account? Log in
+        </button>
+
         <div className="mt-8 glass-card px-6 py-3 fade-up fade-up-delay-4 flex items-center gap-3">
           <div className="flex -space-x-2">
             {['🟣', '🔴', '🟡'].map((dot, i) => (
