@@ -359,6 +359,24 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background relative">
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onLogout={handleLogout} />
+      <XpAnimation amount={xpGainAmount} show={showXpAnimation} onDone={() => setShowXpAnimation(false)} />
+
+      {/* Level Up Celebration */}
+      {showLevelUp && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="text-center animate-in zoom-in duration-500">
+            <div className="text-7xl mb-4">🎉</div>
+            <h2 className="text-3xl font-black text-gradient-hero mb-2">Level Up!</h2>
+            <p className="text-xl font-bold text-primary">{currentLevel} Unlocked</p>
+            <p className="text-muted-foreground text-sm mt-2">+300 XP Bonus! New 30-day roadmap awaits 🚀</p>
+            <button onClick={() => setShowLevelUp(false)}
+              className="mt-6 px-8 py-3 rounded-full text-sm font-bold text-primary-foreground"
+              style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+              Let's Go! 💪
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -583,6 +601,53 @@ const Dashboard = () => {
                     </span>
                   )}
                 </button>
+
+                {/* Rematch warning */}
+                {mateInactive && (
+                  <div className="mt-3 p-3 rounded-xl border border-secondary/30" style={{ background: 'hsla(25, 80%, 50%, 0.08)' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-4 h-4 text-secondary" />
+                      <p className="text-xs font-bold text-secondary">Your GoalMate seems inactive 😴</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setMateInactive(false)}
+                        className="flex-1 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
+                        Keep Waiting
+                      </button>
+                      <button onClick={async () => {
+                        if (!match || !user || !profile) return;
+                        await supabase.from("matches").update({ status: "archived" }).eq("id", match.id);
+                        setMatch(null);
+                        setMatchProfile(null);
+                        setMateInactive(false);
+                        // Trigger re-match
+                        const { data: candidates } = await supabase
+                          .from("profiles").select("*")
+                          .eq("goal_category", profile.goal_category)
+                          .neq("user_id", user.id).limit(10);
+                        if (candidates) {
+                          for (const c of candidates) {
+                            if (c.user_id === match.user1_id || c.user_id === match.user2_id) continue;
+                            const { data: existing } = await supabase.from("matches").select("id")
+                              .or(`user1_id.eq.${c.user_id},user2_id.eq.${c.user_id}`)
+                              .eq("status", "active").limit(1).maybeSingle();
+                            if (!existing) {
+                              const { data: newMatch } = await supabase.from("matches")
+                                .insert({ user1_id: user.id, user2_id: c.user_id, goal_category: profile.goal_category })
+                                .select().single();
+                              if (newMatch) { setMatch(newMatch); setMatchProfile(c); }
+                              break;
+                            }
+                          }
+                        }
+                      }}
+                        className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
+                        style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                        Find New Mate
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
