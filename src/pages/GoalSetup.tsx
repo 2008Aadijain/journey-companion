@@ -12,13 +12,14 @@ import { useToast } from "@/hooks/use-toast";
 
 const GoalSetup = () => {
   const navigate = useNavigate();
-  const { user, profile, loading, signUp } = useAuth();
+  const { user, profile, loading, signUp, signIn } = useAuth();
   const { toast } = useToast();
-  const [step, setStep] = useState<"goal" | "custom" | "deadline" | "signup">("goal");
+  const [step, setStep] = useState<"goal" | "custom" | "deadline" | "signup" | "login">("goal");
   const [selectedGoal, setSelectedGoal] = useState<{ id: string; label: string; emoji: string; category?: string } | null>(null);
   const [customGoal, setCustomGoal] = useState("");
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [formLoading, setFormLoading] = useState(false);
 
   // If already logged in with profile, redirect to dashboard
@@ -61,6 +62,18 @@ const GoalSetup = () => {
     setFormLoading(false);
     if (error) {
       toast({ title: "Signup failed", description: error, variant: "destructive" });
+      return;
+    }
+    navigate("/dashboard");
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    const { error } = await signIn(loginForm.email, loginForm.password);
+    setFormLoading(false);
+    if (error) {
+      toast({ title: "Login failed", description: error, variant: "destructive" });
       return;
     }
     navigate("/dashboard");
