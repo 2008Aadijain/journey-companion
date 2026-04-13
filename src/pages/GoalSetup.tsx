@@ -312,6 +312,57 @@ const GoalSetup = () => {
             >
               ← Back to deadline
             </button>
+
+            <button
+              onClick={() => setStep("login")}
+              className="mt-2 w-full text-center text-sm text-primary hover:text-primary/80 transition-colors font-semibold"
+            >
+              Already have an account? Log in
+            </button>
+          </div>
+        )}
+
+        {/* Step: Login */}
+        {step === "login" && (
+          <div className="fade-up">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-black text-gradient-hero tracking-tight">Welcome Back! 👋</h2>
+              <p className="text-muted-foreground mt-2">Log in to continue your journey</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="glass-card-glow p-6 space-y-4">
+              {[
+                { key: "email", label: "Email", type: "email", placeholder: "arjun@example.com" },
+                { key: "password", label: "Password", type: "password", placeholder: "••••••••" },
+              ].map((field) => (
+                <div key={field.key}>
+                  <label className="block text-sm text-muted-foreground mb-1.5 font-medium">{field.label}</label>
+                  <input
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    required
+                    value={loginForm[field.key as keyof typeof loginForm]}
+                    onChange={(e) => setLoginForm({ ...loginForm, [field.key]: e.target.value })}
+                    className="w-full bg-transparent border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  />
+                </div>
+              ))}
+
+              <button
+                type="submit"
+                disabled={formLoading}
+                className="w-full glow-button text-primary-foreground py-4 text-lg font-bold disabled:opacity-60"
+              >
+                {formLoading ? "Logging in..." : "Log In 🔥"}
+              </button>
+            </form>
+
+            <button
+              onClick={() => setStep("goal")}
+              className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← New here? Set up your goal
+            </button>
           </div>
         )}
       </div>
