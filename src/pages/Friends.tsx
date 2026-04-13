@@ -182,6 +182,7 @@ const Friends = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <XpAnimation amount={xpGain} show={showXp} onDone={() => setShowXp(false)} />
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
           <div className="flex items-center gap-3">
@@ -320,6 +321,11 @@ const Friends = () => {
                     <span className="text-xs text-secondary font-bold">{f.streak}</span>
                   </div>
                 </div>
+                <button onClick={() => cheerFriend(f.user_id)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all glass-card text-muted-foreground hover:text-primary hover:bg-primary/10">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Cheer
+                </button>
               </div>
             ))
           )
