@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X } from "lucide-react";
+import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle } from "lucide-react";
 import { getDayTask } from "@/data/roadmaps";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import ProgressGraph from "@/components/ProgressGraph";
 import SettingsPanel from "@/components/SettingsPanel";
+import BottomNav from "@/components/BottomNav";
+import XpAnimation from "@/components/XpAnimation";
 
 const MOTIVATION_QUOTES = [
   "Small steps every day lead to big results. 🚀",
