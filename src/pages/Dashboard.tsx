@@ -232,7 +232,9 @@ const Dashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("user_id", matchProfile.user_id)
         .gte("created_at", threeDaysAgo.toISOString());
-      setMateInactive(count === 0);
+      const inactive = count === 0;
+      setMateInactive(inactive);
+      localStorage.setItem("gm-mate-inactive", String(inactive));
     };
     checkInactive();
   }, [matchProfile]);
@@ -643,7 +645,7 @@ const Dashboard = () => {
                       <p className="text-xs font-bold text-secondary">Your GoalMate seems inactive 😴</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setMateInactive(false)}
+                      <button onClick={() => { setMateInactive(false); localStorage.setItem("gm-mate-inactive", "false"); }}
                         className="flex-1 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
                         Keep Waiting
                       </button>
@@ -653,6 +655,7 @@ const Dashboard = () => {
                         setMatch(null);
                         setMatchProfile(null);
                         setMateInactive(false);
+                        localStorage.setItem("gm-mate-inactive", "false");
                         // Trigger re-match
                         const { data: candidates } = await supabase
                           .from("profiles").select("*")
