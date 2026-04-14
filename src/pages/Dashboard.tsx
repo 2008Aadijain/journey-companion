@@ -356,7 +356,13 @@ const Dashboard = () => {
 
   const handleTaskComplete = () => { if (!taskComplete) setTaskComplete(true); };
 
-  const handleLogout = async () => { await signOut(); navigate("/"); };
+  const handleLogout = async () => {
+    localStorage.removeItem("gm-gemini-key");
+    localStorage.removeItem("gm-ai-activated");
+    localStorage.removeItem("gm-ai-popup-shown");
+    await signOut();
+    navigate("/");
+  };
 
   if (loading || !profile) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -401,8 +407,13 @@ const Dashboard = () => {
 
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-[0.12] blur-[120px]"
+        <div className={cn("absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[120px]",
+          aiActivated ? "opacity-[0.18]" : "opacity-[0.12]")}
           style={{ background: 'hsl(258 100% 55%)' }} />
+        {aiActivated && (
+          <div className="absolute bottom-[20%] right-0 w-[300px] h-[300px] rounded-full opacity-[0.08] blur-[100px]"
+            style={{ background: 'hsl(280 100% 60%)' }} />
+        )}
       </div>
 
       {/* Header */}
