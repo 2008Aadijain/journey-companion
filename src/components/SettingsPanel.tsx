@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +27,7 @@ const FONT_SIZES = [
 
 const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
   const { user, profile, refreshProfile } = useAuth();
+  const { theme, accentColor, fontSize, setTheme, setAccentColor, setFontSize } = useTheme();
   const { toast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(profile?.name || "");
@@ -188,11 +190,11 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
 
           {/* Dark/Light Mode */}
           <div className="flex items-center gap-3 py-3">
-            {prefs.theme === "dark" ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
+            {theme === "dark" ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
             <span className="flex-1 text-sm font-medium text-foreground">Dark Mode</span>
             <Switch
-              checked={prefs.theme === "dark"}
-              onCheckedChange={(checked) => savePrefs({ theme: checked ? "dark" : "light" })}
+              checked={theme === "dark"}
+              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
             />
           </div>
 
@@ -201,14 +203,14 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
             className="w-full flex items-center gap-3 py-3 text-left">
             <Palette className="w-5 h-5 text-muted-foreground" />
             <span className="flex-1 text-sm font-medium text-foreground">Accent Color</span>
-            <div className="w-5 h-5 rounded-full" style={{ background: `hsl(${ACCENT_COLORS.find(c => c.value === prefs.accent_color)?.hsl || ACCENT_COLORS[0].hsl})` }} />
+            <div className="w-5 h-5 rounded-full" style={{ background: `hsl(${ACCENT_COLORS.find(c => c.value === accentColor)?.hsl || ACCENT_COLORS[0].hsl})` }} />
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
           {showAccentPicker && (
             <div className="flex gap-3 pb-2 px-8">
               {ACCENT_COLORS.map(color => (
-                <button key={color.value} onClick={() => { savePrefs({ accent_color: color.value }); setShowAccentPicker(false); }}
-                  className={`w-10 h-10 rounded-full transition-all ${prefs.accent_color === color.value ? "ring-2 ring-foreground ring-offset-2 ring-offset-background scale-110" : "hover:scale-105"}`}
+                <button key={color.value} onClick={() => { setAccentColor(color.value); setShowAccentPicker(false); }}
+                  className={`w-10 h-10 rounded-full transition-all ${accentColor === color.value ? "ring-2 ring-foreground ring-offset-2 ring-offset-background scale-110" : "hover:scale-105"}`}
                   style={{ background: `hsl(${color.hsl})` }}
                   title={color.name}
                 />
@@ -221,14 +223,14 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
             className="w-full flex items-center gap-3 py-3 text-left">
             <Type className="w-5 h-5 text-muted-foreground" />
             <span className="flex-1 text-sm font-medium text-foreground">Font Size</span>
-            <span className="text-xs text-muted-foreground capitalize">{prefs.font_size}</span>
+            <span className="text-xs text-muted-foreground capitalize">{fontSize}</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
           {showFontPicker && (
             <div className="flex gap-2 pb-2 px-8">
               {FONT_SIZES.map(fs => (
-                <button key={fs.value} onClick={() => { savePrefs({ font_size: fs.value }); setShowFontPicker(false); }}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${prefs.font_size === fs.value ? "bg-primary text-primary-foreground" : "glass-card text-muted-foreground"}`}>
+                <button key={fs.value} onClick={() => { setFontSize(fs.value); setShowFontPicker(false); }}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${fontSize === fs.value ? "bg-primary text-primary-foreground" : "glass-card text-muted-foreground"}`}>
                   {fs.label}
                 </button>
               ))}

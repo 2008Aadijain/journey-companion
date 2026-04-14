@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle } from "lucide-react";
+import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink } from "lucide-react";
 import { getDayTask } from "@/data/roadmaps";
+import { getVideosForCategory } from "@/data/youtube-resources";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,7 +93,9 @@ const Dashboard = () => {
   const [pendingFriendCount, setPendingFriendCount] = useState(0);
   const [xpGainAmount, setXpGainAmount] = useState(0);
   const [showXpAnimation, setShowXpAnimation] = useState(false);
-  const [mateInactive, setMateInactive] = useState(false);
+  const [mateInactive, setMateInactive] = useState(() => {
+    return localStorage.getItem("gm-mate-inactive") === "true";
+  });
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [currentLevel, setCurrentLevel] = useState("Beginner");
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -229,7 +232,9 @@ const Dashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("user_id", matchProfile.user_id)
         .gte("created_at", threeDaysAgo.toISOString());
-      setMateInactive(count === 0);
+      const inactive = count === 0;
+      setMateInactive(inactive);
+      localStorage.setItem("gm-mate-inactive", String(inactive));
     };
     checkInactive();
   }, [matchProfile]);
@@ -484,8 +489,38 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* ===== LEARNING RESOURCES ===== */}
+        <div className={fadeClass(2)} style={{ transitionDelay: '150ms' }}>
+          <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(258, 30%, 12%, 0.5)' }}>
+            <div className="flex items-center gap-2 mb-4">
+              <Play className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-foreground">Learning Resources</span>
+            </div>
+            <div className="space-y-3">
+              {getVideosForCategory(profile.goal_category).map((video, i) => (
+                <a key={i} href={video.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
+                  style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
+                  <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted/30 flex items-center justify-center relative">
+                    <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <Play className="w-5 h-5 text-white fill-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground line-clamp-2">{video.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">YouTube</p>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* ===== DAILY CHECK-IN ===== */}
-        <div className={fadeClass(2)} style={{ transitionDelay: '200ms' }}>
+        <div className={fadeClass(3)} style={{ transitionDelay: '250ms' }}>
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(258, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Flame className="w-4 h-4 text-secondary" />
@@ -550,12 +585,12 @@ const Dashboard = () => {
         </div>
 
         {/* ===== PROGRESS GRAPH ===== */}
-        <div className={fadeClass(3)} style={{ transitionDelay: '250ms' }}>
+        <div className={fadeClass(4)} style={{ transitionDelay: '300ms' }}>
           <ProgressGraph checkInDates={checkInDates} />
         </div>
 
         {/* ===== GOALMATE CARD ===== */}
-        <div className={fadeClass(4)} style={{ transitionDelay: '300ms' }}>
+        <div className={fadeClass(5)} style={{ transitionDelay: '350ms' }}>
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(270, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-4 h-4 text-primary" />
@@ -610,7 +645,7 @@ const Dashboard = () => {
                       <p className="text-xs font-bold text-secondary">Your GoalMate seems inactive 😴</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setMateInactive(false)}
+                      <button onClick={() => { setMateInactive(false); localStorage.setItem("gm-mate-inactive", "false"); }}
                         className="flex-1 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
                         Keep Waiting
                       </button>
@@ -620,6 +655,7 @@ const Dashboard = () => {
                         setMatch(null);
                         setMatchProfile(null);
                         setMateInactive(false);
+                        localStorage.setItem("gm-mate-inactive", "false");
                         // Trigger re-match
                         const { data: candidates } = await supabase
                           .from("profiles").select("*")
