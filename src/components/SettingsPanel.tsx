@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail } from "lucide-react";
+import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail, Bot, ExternalLink } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +49,9 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
   const [changingPassword, setChangingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [aiKeyStored, setAiKeyStored] = useState(() => !!localStorage.getItem("gm-gemini-key"));
+  const [showAiKeyInput, setShowAiKeyInput] = useState(false);
+  const [aiKeyValue, setAiKeyValue] = useState("");
 
   // Load preferences
   useEffect(() => {
@@ -330,6 +333,70 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
             <span className="text-xs text-muted-foreground">{prefs.language === "en" ? "English" : "हिंदी"}</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
+
+          <div className="h-px bg-border/30 my-1" />
+
+          {/* ═══ AI POWER ═══ */}
+          {sectionTitle("AI Power")}
+
+          <div className="flex items-center gap-3 py-3">
+            <Bot className="w-5 h-5 text-muted-foreground" />
+            <span className="flex-1 text-sm font-medium text-foreground">Gemini API Key</span>
+            {aiKeyStored ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                style={{ background: 'hsla(145, 70%, 45%, 0.2)', color: 'hsl(145 70% 55%)' }}>
+                ✨ Active
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">Not set</span>
+            )}
+          </div>
+
+          {aiKeyStored ? (
+            <div className="px-8 pb-2">
+              <button onClick={() => {
+                localStorage.removeItem("gm-gemini-key");
+                localStorage.removeItem("gm-ai-activated");
+                setAiKeyStored(false);
+                toast({ title: "API key removed" });
+              }}
+                className="text-xs text-destructive/70 hover:text-destructive transition-colors font-semibold">
+                Remove API Key
+              </button>
+            </div>
+          ) : (
+            <>
+              <button onClick={() => setShowAiKeyInput(!showAiKeyInput)}
+                className="w-full flex items-center gap-3 py-2 px-8 text-left">
+                <span className="text-xs text-primary font-semibold">+ Add API Key</span>
+              </button>
+              {showAiKeyInput && (
+                <div className="px-8 pb-2 space-y-2">
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-[11px] text-primary/70 hover:text-primary">
+                    <ExternalLink className="w-3 h-3" /> Get free key from Google AI Studio
+                  </a>
+                  <div className="flex gap-2">
+                    <input type="password" value={aiKeyValue} onChange={e => setAiKeyValue(e.target.value)}
+                      placeholder="Paste API key..."
+                      className="flex-1 bg-transparent border border-border/50 rounded-full px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-muted-foreground/50" />
+                    <button onClick={() => {
+                      if (!aiKeyValue.trim()) return;
+                      localStorage.setItem("gm-gemini-key", aiKeyValue.trim());
+                      localStorage.setItem("gm-ai-activated", "true");
+                      localStorage.setItem("gm-ai-popup-shown", "true");
+                      setAiKeyStored(true);
+                      setShowAiKeyInput(false);
+                      setAiKeyValue("");
+                      toast({ title: "AI Activated! ✨" });
+                    }}
+                      className="px-4 py-2 rounded-full text-xs font-bold text-primary-foreground"
+                      style={{ background: 'hsl(258 100% 62%)' }}>Save</button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           <div className="h-px bg-border/30 my-1" />
 
