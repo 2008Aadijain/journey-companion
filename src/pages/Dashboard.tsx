@@ -116,6 +116,14 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Show AI popup on first login
+  useEffect(() => {
+    if (!loading && user && profile && !localStorage.getItem("gm-ai-popup-shown")) {
+      const timer = setTimeout(() => setShowAiPopup(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, user, profile]);
+
   // 8 PM reminder check
   useEffect(() => {
     if (!user || !profile || todayCheckedIn) return;
