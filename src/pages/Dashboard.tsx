@@ -93,7 +93,9 @@ const Dashboard = () => {
   const [pendingFriendCount, setPendingFriendCount] = useState(0);
   const [xpGainAmount, setXpGainAmount] = useState(0);
   const [showXpAnimation, setShowXpAnimation] = useState(false);
-  const [mateInactive, setMateInactive] = useState(false);
+  const [mateInactive, setMateInactive] = useState(() => {
+    return localStorage.getItem("gm-mate-inactive") === "true";
+  });
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [currentLevel, setCurrentLevel] = useState("Beginner");
   const photoInputRef = useRef<HTMLInputElement>(null);
