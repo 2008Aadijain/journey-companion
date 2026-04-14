@@ -374,6 +374,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <AiKeyPopup
+        open={showAiPopup}
+        onClose={() => setShowAiPopup(false)}
+        onActivate={() => { setAiActivated(true); setShowAiPopup(false); }}
+      />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onLogout={handleLogout} />
       <XpAnimation amount={xpGainAmount} show={showXpAnimation} onDone={() => setShowXpAnimation(false)} />
 
@@ -403,7 +408,15 @@ const Dashboard = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-5 py-3.5 max-w-lg mx-auto">
-          <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
+            {aiActivated && (
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                style={{ background: 'hsla(145, 70%, 45%, 0.2)', color: 'hsl(145 70% 55%)', border: '1px solid hsla(145, 70%, 45%, 0.3)' }}>
+                ✨ AI
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {/* XP Badge */}
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-full"
