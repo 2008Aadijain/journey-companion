@@ -447,6 +447,21 @@ const Dashboard = () => {
 
       <main className="relative z-10 px-5 pt-6 pb-6 max-w-lg mx-auto space-y-5">
 
+        {/* ===== AI ACTIVATE BUTTON (no key) ===== */}
+        {!aiActivated && (
+          <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
+            <button onClick={() => setShowAiPopup(true)}
+              className="w-full py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] animate-pulse"
+              style={{
+                background: 'linear-gradient(135deg, hsla(258, 100%, 62%, 0.2), hsla(280, 100%, 55%, 0.15))',
+                border: '1px solid hsla(258, 100%, 62%, 0.4)',
+                boxShadow: '0 0 30px hsla(258, 100%, 62%, 0.15)',
+              }}>
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-primary">⚡ Activate AI Power</span>
+            </button>
+          </div>
+        )}
         {/* ===== STREAK HERO ===== */}
         <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
           <div className="flex items-center justify-between">
