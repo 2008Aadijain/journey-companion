@@ -581,12 +581,12 @@ const Dashboard = () => {
         </div>
 
         {/* ===== PROGRESS GRAPH ===== */}
-        <div className={fadeClass(3)} style={{ transitionDelay: '250ms' }}>
+        <div className={fadeClass(4)} style={{ transitionDelay: '300ms' }}>
           <ProgressGraph checkInDates={checkInDates} />
         </div>
 
         {/* ===== GOALMATE CARD ===== */}
-        <div className={fadeClass(4)} style={{ transitionDelay: '300ms' }}>
+        <div className={fadeClass(5)} style={{ transitionDelay: '350ms' }}>
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(270, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-4 h-4 text-primary" />
