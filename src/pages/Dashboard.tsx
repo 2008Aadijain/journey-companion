@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink } from "lucide-react";
+import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink, Bot } from "lucide-react";
 import { getDayTask } from "@/data/roadmaps";
 import { getVideosForCategory } from "@/data/youtube-resources";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import ProgressGraph from "@/components/ProgressGraph";
 import SettingsPanel from "@/components/SettingsPanel";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
+import AiKeyPopup from "@/components/AiKeyPopup";
 
 const MOTIVATION_QUOTES = [
   "Small steps every day lead to big results. 🚀",
@@ -98,6 +99,8 @@ const Dashboard = () => {
   });
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [currentLevel, setCurrentLevel] = useState("Beginner");
+  const [aiActivated, setAiActivated] = useState(() => localStorage.getItem("gm-ai-activated") === "true");
+  const [showAiPopup, setShowAiPopup] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
