@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +27,7 @@ const FONT_SIZES = [
 
 const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
   const { user, profile, refreshProfile } = useAuth();
+  const { theme, accentColor, fontSize, setTheme, setAccentColor, setFontSize } = useTheme();
   const { toast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(profile?.name || "");
