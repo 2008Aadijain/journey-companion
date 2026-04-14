@@ -534,6 +534,12 @@ const Dashboard = () => {
             <div className="flex items-center gap-2 mb-4">
               <Play className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold text-foreground">Learning Resources</span>
+              {aiActivated && (
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                  style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
+                  ✨ AI Picked
+                </span>
+              )}
             </div>
             <div className="space-y-3">
               {getVideosForCategory(profile.goal_category).map((video, i) => (
@@ -772,6 +778,12 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-base">📋</span>
                   <span className="text-sm font-bold text-foreground">Today's Task</span>
+                  {aiActivated && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                      style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
+                      🤖 AI Generated
+                    </span>
+                  )}
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70 px-2.5 py-1 rounded-full"
                   style={{ background: 'hsla(258, 80%, 50%, 0.12)' }}>Day {todayTask.day}</span>
