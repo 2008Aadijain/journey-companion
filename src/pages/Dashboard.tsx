@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink } from "lucide-react";
+import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink, Bot } from "lucide-react";
 import { getDayTask } from "@/data/roadmaps";
 import { getVideosForCategory } from "@/data/youtube-resources";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import ProgressGraph from "@/components/ProgressGraph";
 import SettingsPanel from "@/components/SettingsPanel";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
+import AiKeyPopup from "@/components/AiKeyPopup";
 
 const MOTIVATION_QUOTES = [
   "Small steps every day lead to big results. 🚀",
@@ -98,6 +99,8 @@ const Dashboard = () => {
   });
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [currentLevel, setCurrentLevel] = useState("Beginner");
+  const [aiActivated, setAiActivated] = useState(() => localStorage.getItem("gm-ai-activated") === "true");
+  const [showAiPopup, setShowAiPopup] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
@@ -112,6 +115,14 @@ const Dashboard = () => {
       Notification.requestPermission();
     }
   }, []);
+
+  // Show AI popup on first login
+  useEffect(() => {
+    if (!loading && user && profile && !localStorage.getItem("gm-ai-popup-shown")) {
+      const timer = setTimeout(() => setShowAiPopup(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, user, profile]);
 
   // 8 PM reminder check
   useEffect(() => {
@@ -345,7 +356,13 @@ const Dashboard = () => {
 
   const handleTaskComplete = () => { if (!taskComplete) setTaskComplete(true); };
 
-  const handleLogout = async () => { await signOut(); navigate("/"); };
+  const handleLogout = async () => {
+    localStorage.removeItem("gm-gemini-key");
+    localStorage.removeItem("gm-ai-activated");
+    localStorage.removeItem("gm-ai-popup-shown");
+    await signOut();
+    navigate("/");
+  };
 
   if (loading || !profile) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -363,6 +380,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <AiKeyPopup
+        open={showAiPopup}
+        onClose={() => setShowAiPopup(false)}
+        onActivate={() => { setAiActivated(true); setShowAiPopup(false); }}
+      />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onLogout={handleLogout} />
       <XpAnimation amount={xpGainAmount} show={showXpAnimation} onDone={() => setShowXpAnimation(false)} />
 
@@ -385,14 +407,27 @@ const Dashboard = () => {
 
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-[0.12] blur-[120px]"
+        <div className={cn("absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[120px]",
+          aiActivated ? "opacity-[0.18]" : "opacity-[0.12]")}
           style={{ background: 'hsl(258 100% 55%)' }} />
+        {aiActivated && (
+          <div className="absolute bottom-[20%] right-0 w-[300px] h-[300px] rounded-full opacity-[0.08] blur-[100px]"
+            style={{ background: 'hsl(280 100% 60%)' }} />
+        )}
       </div>
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-5 py-3.5 max-w-lg mx-auto">
-          <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
+            {aiActivated && (
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                style={{ background: 'hsla(145, 70%, 45%, 0.2)', color: 'hsl(145 70% 55%)', border: '1px solid hsla(145, 70%, 45%, 0.3)' }}>
+                ✨ AI
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {/* XP Badge */}
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-full"
@@ -423,6 +458,21 @@ const Dashboard = () => {
 
       <main className="relative z-10 px-5 pt-6 pb-6 max-w-lg mx-auto space-y-5">
 
+        {/* ===== AI ACTIVATE BUTTON (no key) ===== */}
+        {!aiActivated && (
+          <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
+            <button onClick={() => setShowAiPopup(true)}
+              className="w-full py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] animate-pulse"
+              style={{
+                background: 'linear-gradient(135deg, hsla(258, 100%, 62%, 0.2), hsla(280, 100%, 55%, 0.15))',
+                border: '1px solid hsla(258, 100%, 62%, 0.4)',
+                boxShadow: '0 0 30px hsla(258, 100%, 62%, 0.15)',
+              }}>
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-primary">⚡ Activate AI Power</span>
+            </button>
+          </div>
+        )}
         {/* ===== STREAK HERO ===== */}
         <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
           <div className="flex items-center justify-between">
@@ -495,6 +545,12 @@ const Dashboard = () => {
             <div className="flex items-center gap-2 mb-4">
               <Play className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold text-foreground">Learning Resources</span>
+              {aiActivated && (
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                  style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
+                  ✨ AI Picked
+                </span>
+              )}
             </div>
             <div className="space-y-3">
               {getVideosForCategory(profile.goal_category).map((video, i) => (
@@ -733,6 +789,12 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-base">📋</span>
                   <span className="text-sm font-bold text-foreground">Today's Task</span>
+                  {aiActivated && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                      style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
+                      🤖 AI Generated
+                    </span>
+                  )}
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70 px-2.5 py-1 rounded-full"
                   style={{ background: 'hsla(258, 80%, 50%, 0.12)' }}>Day {todayTask.day}</span>
