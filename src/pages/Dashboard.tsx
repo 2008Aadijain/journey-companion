@@ -647,7 +647,6 @@ const Dashboard = () => {
                 >
                   Check In ✅ (+10 XP{checkinPhoto ? " +5 📸" : ""})
                 </button>
-                </button>
               </>
             )}
           </div>
