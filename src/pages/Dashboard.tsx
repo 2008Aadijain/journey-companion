@@ -311,7 +311,7 @@ const Dashboard = () => {
   };
 
   const handleCheckin = async () => {
-    if (!checkinText.trim() || !user || !profile || todayCheckedIn) return;
+    if (!checkinText.trim() || wordCount < 6 || !user || !profile || todayCheckedIn) return;
 
     let photoUrl: string | null = null;
     if (checkinPhoto) {
