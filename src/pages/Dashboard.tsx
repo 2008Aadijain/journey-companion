@@ -561,6 +561,27 @@ const Dashboard = () => {
                 style={{ background: 'hsla(25, 100%, 55%, 0.6)' }} />
             </div>
           </div>
+
+          {/* Streak Shield */}
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={() => {
+                if (!streakShieldAvailable) return;
+                localStorage.setItem("gm-shield-used", String(Date.now()));
+                setStreakShieldAvailable(false);
+                toast({ title: "🛡️ Streak Shield activated! +5 XP" });
+              }}
+              disabled={!streakShieldAvailable}
+              className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
+                streakShieldAvailable
+                  ? "glass-card text-foreground hover:bg-primary/10"
+                  : "opacity-40 glass-card text-muted-foreground"
+              )}
+            >
+              <Shield className={cn("w-3.5 h-3.5", streakShieldAvailable ? "text-primary" : "text-muted-foreground")} />
+              {streakShieldAvailable ? "🛡️ 1 shield available" : "Shield used this week"}
+            </button>
+          </div>
         </div>
 
         {/* ===== MY GOAL CARD ===== */}
