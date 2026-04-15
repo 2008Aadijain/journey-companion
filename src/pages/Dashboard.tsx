@@ -246,6 +246,31 @@ const Dashboard = () => {
     checkInactive();
   }, [matchProfile]);
 
+  // Check if buddy checked in today
+  useEffect(() => {
+    if (!matchProfile) return;
+    const checkBuddy = async () => {
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const { count } = await supabase
+        .from("check_ins")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", matchProfile.user_id)
+        .gte("created_at", startOfDay);
+      setBuddyCheckedInToday((count ?? 0) > 0);
+    };
+    checkBuddy();
+  }, [matchProfile]);
+
+  // Streak shield availability (once per week)
+  useEffect(() => {
+    const lastUsed = localStorage.getItem("gm-shield-used");
+    if (lastUsed) {
+      const diff = Date.now() - parseInt(lastUsed);
+      setStreakShieldAvailable(diff > 7 * 24 * 60 * 60 * 1000);
+    }
+  }, []);
+
   useEffect(() => {
     if (!match || !user) return;
     const countUnread = async () => {
@@ -690,7 +715,17 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-3">Motivate each other 💪</p>
+                {/* Buddy Status */}
+                <div className="mt-2 flex items-center gap-1.5">
+                  {matchProfile.streak >= 7 ? (
+                    <span className="text-[11px] font-semibold text-secondary">🔥 On a streak!</span>
+                  ) : buddyCheckedInToday ? (
+                    <span className="text-[11px] font-semibold" style={{ color: '#00E5A0' }}>🟢 Active today</span>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-muted-foreground">😴 Not checked in yet</span>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">Motivate each other 💪</p>
                 <button
                   onClick={() => navigate(`/chat/${match?.id}`)}
                   className="mt-3 w-full py-2.5 rounded-full text-sm font-bold text-foreground transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
