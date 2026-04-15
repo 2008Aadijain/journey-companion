@@ -92,12 +92,17 @@ const Dashboard = () => {
   const [currentLevel, setCurrentLevel] = useState("Beginner");
   const [aiActivated, setAiActivated] = useState(() => localStorage.getItem("gm-ai-activated") === "true");
   const [showAiPopup, setShowAiPopup] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("gm-onboarding-done"));
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [streakShieldAvailable, setStreakShieldAvailable] = useState(true);
+  const [buddyCheckedInToday, setBuddyCheckedInToday] = useState<boolean | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/goal-setup");
+    if (!loading && !user) navigate("/login");
   }, [loading, user, navigate]);
 
   // Request notification permission on first load
@@ -278,7 +283,14 @@ const Dashboard = () => {
       getDayTask(profile.goal_category.toLowerCase(), calculatedDay);
   }, [profile, calculatedDay]);
 
-  const todayQuote = useMemo(() => MOTIVATION_QUOTES[new Date().getDate() % MOTIVATION_QUOTES.length], []);
+  const todayQuote = useMemo(() => {
+    const q = MOTIVATION_QUOTES[new Date().getDate() % MOTIVATION_QUOTES.length];
+    return q;
+  }, []);
+
+  const wordCount = useMemo(() => {
+    return checkinText.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }, [checkinText]);
   const todayNudge = useMemo(() => {
     if (!profile) return "";
     return getSmartNudge(profile.goal_category, calculatedDay);
