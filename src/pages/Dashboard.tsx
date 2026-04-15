@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink, Bot } from "lucide-react";
+import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink, Bot, Shield, Share2, ChevronLeft } from "lucide-react";
 import { getDayTask } from "@/data/roadmaps";
 import { getVideosForCategory } from "@/data/youtube-resources";
+import { MOTIVATION_QUOTES } from "@/data/motivation-quotes";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,17 +13,7 @@ import SettingsPanel from "@/components/SettingsPanel";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
 import AiKeyPopup from "@/components/AiKeyPopup";
-
-const MOTIVATION_QUOTES = [
-  "Small steps every day lead to big results. 🚀",
-  "You didn't come this far to only come this far. 💪",
-  "Discipline is choosing what you want most over what you want now. 🎯",
-  "The secret of getting ahead is getting started. ⚡",
-  "Progress, not perfection. 🌟",
-  "Your future self will thank you. 🔥",
-  "Consistency beats intensity. Every single time. 💎",
-  "One day or day one — you decide. 🏆",
-];
+import { useToast } from "@/hooks/use-toast";
 
 const SMART_NUDGES: Record<string, string[]> = {
   Learning: [
