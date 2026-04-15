@@ -422,9 +422,9 @@ const Dashboard = () => {
           <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
             {aiActivated && (
-              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
-                style={{ background: 'hsla(145, 70%, 45%, 0.2)', color: 'hsl(145 70% 55%)', border: '1px solid hsla(145, 70%, 45%, 0.3)' }}>
-                ✨ AI
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+                style={{ background: 'hsla(160, 80%, 45%, 0.15)', color: '#00E5A0', border: '1px solid hsla(160, 80%, 45%, 0.3)' }}>
+                ✨ AI Powered
               </span>
             )}
           </div>

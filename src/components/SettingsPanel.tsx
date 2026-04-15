@@ -353,15 +353,21 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
           </div>
 
           {aiKeyStored ? (
-            <div className="px-8 pb-2">
+            <div className="px-8 pb-3 space-y-3">
+              <div className="p-3 rounded-xl" style={{ background: 'hsla(160, 80%, 45%, 0.08)', border: '1px solid hsla(160, 80%, 45%, 0.2)' }}>
+                <p className="text-xs font-bold" style={{ color: '#00E5A0' }}>AI Status: Active ✨</p>
+                <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                  🔒 Your key is encrypted & safe. Logout = key deleted forever.
+                </p>
+              </div>
               <button onClick={() => {
                 localStorage.removeItem("gm-gemini-key");
                 localStorage.removeItem("gm-ai-activated");
                 setAiKeyStored(false);
-                toast({ title: "API key removed" });
+                toast({ title: "AI deactivated" });
               }}
-                className="text-xs text-destructive/70 hover:text-destructive transition-colors font-semibold">
-                Remove API Key
+                className="w-full py-2 rounded-full text-xs font-bold text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors">
+                Deactivate AI
               </button>
             </div>
           ) : (
