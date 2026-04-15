@@ -60,16 +60,16 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "light") {
-      root.style.setProperty("--background", "0 0% 98%");
-      root.style.setProperty("--foreground", "270 50% 10%");
+      root.style.setProperty("--background", "0 0% 100%");
+      root.style.setProperty("--foreground", "240 30% 10%");
       root.style.setProperty("--card", "0 0% 100%");
-      root.style.setProperty("--card-foreground", "270 50% 10%");
+      root.style.setProperty("--card-foreground", "240 30% 10%");
       root.style.setProperty("--popover", "0 0% 100%");
-      root.style.setProperty("--popover-foreground", "270 50% 10%");
-      root.style.setProperty("--muted", "270 10% 90%");
-      root.style.setProperty("--muted-foreground", "270 10% 40%");
-      root.style.setProperty("--border", "270 10% 85%");
-      root.style.setProperty("--input", "270 10% 85%");
+      root.style.setProperty("--popover-foreground", "240 30% 10%");
+      root.style.setProperty("--muted", "250 20% 96%");
+      root.style.setProperty("--muted-foreground", "250 15% 45%");
+      root.style.setProperty("--border", "250 20% 90%");
+      root.style.setProperty("--input", "250 20% 92%");
       root.classList.add("light-mode");
       root.classList.remove("dark-mode");
     } else {

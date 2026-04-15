@@ -158,11 +158,34 @@
     background-clip: text;
   }
 
+  .light-mode .text-gradient-hero {
+    background: linear-gradient(135deg, hsl(258 100% 45%) 0%, hsl(280 80% 40%) 50%, hsl(258 100% 55%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .text-gradient-accent {
     background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(20 100% 65%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .light-mode .glass-card,
+  .light-mode .glass-card-glow {
+    background: hsla(0, 0%, 100%, 0.8);
+    border-color: hsla(258, 40%, 80%, 0.3);
+    box-shadow: 0 2px 20px -5px hsla(258, 60%, 50%, 0.08);
+  }
+
+  .light-mode .glass-card::before,
+  .light-mode .glass-card-glow::before {
+    background: linear-gradient(135deg, hsla(258, 100%, 70%, 0.1) 0%, transparent 40%, transparent 60%, hsla(280, 80%, 60%, 0.05) 100%);
+  }
+
+  .light-mode .glass-card-glow:hover {
+    box-shadow: 0 4px 30px -5px hsla(258, 60%, 50%, 0.15);
   }
 
   .fade-up {
