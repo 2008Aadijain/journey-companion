@@ -597,9 +597,18 @@ const Dashboard = () => {
                 <textarea
                   value={checkinText}
                   onChange={(e) => setCheckinText(e.target.value)}
-                  placeholder="What did you do today for your goal?"
+                  placeholder="What did you do today for your goal? (min 6 words)"
                   className="w-full h-20 bg-transparent border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 resize-none transition-all"
                 />
+
+                <div className="mt-1 flex items-center justify-between px-1">
+                  <span className={cn("text-[10px] font-semibold", wordCount >= 6 ? "text-primary" : "text-muted-foreground")}>
+                    {wordCount}/6 words minimum
+                  </span>
+                  {wordCount > 0 && wordCount < 6 && (
+                    <span className="text-[10px] text-destructive">Please write at least 6 words</span>
+                  )}
+                </div>
 
                 {/* Photo preview */}
                 {checkinPhotoPreview && (
@@ -625,18 +634,19 @@ const Dashboard = () => {
 
                 <button
                   onClick={handleCheckin}
-                  disabled={!checkinText.trim()}
+                  disabled={wordCount < 6}
                   className="mt-3 w-full py-3.5 rounded-full text-sm font-bold text-primary-foreground transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97]"
                   style={{
-                    background: checkinText.trim()
+                    background: wordCount >= 6
                       ? 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 58%))'
                       : 'hsla(258, 30%, 30%, 0.5)',
-                    boxShadow: checkinText.trim()
+                    boxShadow: wordCount >= 6
                       ? '0 0 30px hsla(258, 100%, 62%, 0.4), inset 0 1px 0 hsla(0, 0%, 100%, 0.15)'
                       : 'none',
                   }}
                 >
                   Check In ✅ (+10 XP{checkinPhoto ? " +5 📸" : ""})
+                </button>
                 </button>
               </>
             )}
