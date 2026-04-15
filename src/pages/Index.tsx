@@ -12,6 +12,8 @@ const Index = () => {
   useEffect(() => {
     if (!loading && user && profile) {
       navigate("/dashboard", { replace: true });
+    } else if (!loading && user && !profile) {
+      navigate("/goal-setup", { replace: true });
     }
   }, [loading, user, profile, navigate]);
 
@@ -57,14 +59,14 @@ const Index = () => {
         </p>
 
         <button
-          onClick={() => navigate("/goal-setup")}
+          onClick={() => navigate("/login")}
           className="mt-10 glow-button text-primary-foreground px-12 py-4 text-lg fade-up fade-up-delay-3"
         >
           Start Your Journey →
         </button>
 
         <button
-          onClick={() => navigate("/goal-setup?login=true")}
+          onClick={() => navigate("/login")}
           className="mt-3 text-sm text-primary hover:text-primary/80 font-semibold transition-colors fade-up fade-up-delay-3"
         >
           Already have an account? Log in

@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink, Bot } from "lucide-react";
+import { Check, Flame, Target, Users, Calendar, ChevronRight, MessageCircle, Globe, User, Sparkles, MoreVertical, Trophy, Zap, Camera, X, AlertTriangle, Play, ExternalLink, Bot, Shield, Share2, ChevronLeft } from "lucide-react";
 import { getDayTask } from "@/data/roadmaps";
 import { getVideosForCategory } from "@/data/youtube-resources";
+import { MOTIVATION_QUOTES } from "@/data/motivation-quotes";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,17 +13,7 @@ import SettingsPanel from "@/components/SettingsPanel";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
 import AiKeyPopup from "@/components/AiKeyPopup";
-
-const MOTIVATION_QUOTES = [
-  "Small steps every day lead to big results. 🚀",
-  "You didn't come this far to only come this far. 💪",
-  "Discipline is choosing what you want most over what you want now. 🎯",
-  "The secret of getting ahead is getting started. ⚡",
-  "Progress, not perfection. 🌟",
-  "Your future self will thank you. 🔥",
-  "Consistency beats intensity. Every single time. 💎",
-  "One day or day one — you decide. 🏆",
-];
+import { useToast } from "@/hooks/use-toast";
 
 const SMART_NUDGES: Record<string, string[]> = {
   Learning: [
@@ -101,12 +92,17 @@ const Dashboard = () => {
   const [currentLevel, setCurrentLevel] = useState("Beginner");
   const [aiActivated, setAiActivated] = useState(() => localStorage.getItem("gm-ai-activated") === "true");
   const [showAiPopup, setShowAiPopup] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("gm-onboarding-done"));
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [streakShieldAvailable, setStreakShieldAvailable] = useState(true);
+  const [buddyCheckedInToday, setBuddyCheckedInToday] = useState<boolean | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/goal-setup");
+    if (!loading && !user) navigate("/login");
   }, [loading, user, navigate]);
 
   // Request notification permission on first load
@@ -250,6 +246,31 @@ const Dashboard = () => {
     checkInactive();
   }, [matchProfile]);
 
+  // Check if buddy checked in today
+  useEffect(() => {
+    if (!matchProfile) return;
+    const checkBuddy = async () => {
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const { count } = await supabase
+        .from("check_ins")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", matchProfile.user_id)
+        .gte("created_at", startOfDay);
+      setBuddyCheckedInToday((count ?? 0) > 0);
+    };
+    checkBuddy();
+  }, [matchProfile]);
+
+  // Streak shield availability (once per week)
+  useEffect(() => {
+    const lastUsed = localStorage.getItem("gm-shield-used");
+    if (lastUsed) {
+      const diff = Date.now() - parseInt(lastUsed);
+      setStreakShieldAvailable(diff > 7 * 24 * 60 * 60 * 1000);
+    }
+  }, []);
+
   useEffect(() => {
     if (!match || !user) return;
     const countUnread = async () => {
@@ -287,7 +308,14 @@ const Dashboard = () => {
       getDayTask(profile.goal_category.toLowerCase(), calculatedDay);
   }, [profile, calculatedDay]);
 
-  const todayQuote = useMemo(() => MOTIVATION_QUOTES[new Date().getDate() % MOTIVATION_QUOTES.length], []);
+  const todayQuote = useMemo(() => {
+    const q = MOTIVATION_QUOTES[new Date().getDate() % MOTIVATION_QUOTES.length];
+    return q;
+  }, []);
+
+  const wordCount = useMemo(() => {
+    return checkinText.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }, [checkinText]);
   const todayNudge = useMemo(() => {
     if (!profile) return "";
     return getSmartNudge(profile.goal_category, calculatedDay);
@@ -308,7 +336,7 @@ const Dashboard = () => {
   };
 
   const handleCheckin = async () => {
-    if (!checkinText.trim() || !user || !profile || todayCheckedIn) return;
+    if (!checkinText.trim() || wordCount < 6 || !user || !profile || todayCheckedIn) return;
 
     let photoUrl: string | null = null;
     if (checkinPhoto) {
@@ -473,6 +501,50 @@ const Dashboard = () => {
             </button>
           </div>
         )}
+
+        {/* ===== ONBOARDING TIPS ===== */}
+        {showOnboarding && (
+          <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
+            <div className="rounded-2xl p-5 border border-primary/30" style={{ background: 'hsla(258, 40%, 15%, 0.6)' }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-foreground">👋 Welcome! Here's how GoalMate works</span>
+                <button onClick={() => { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); }}
+                  className="text-xs text-muted-foreground hover:text-foreground">Skip</button>
+              </div>
+              {[
+                { text: "Check in daily to build your streak 🔥", icon: "1" },
+                { text: "Your GoalMate will keep you accountable 🤝", icon: "2" },
+                { text: "Earn XP and climb the leaderboard 🏆", icon: "3" },
+              ].map((tip, i) => (
+                <div key={i} className={cn("flex items-center gap-3 py-2 transition-all duration-500",
+                  i === onboardingStep ? "opacity-100" : "opacity-40")}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: i === onboardingStep ? 'hsl(258 100% 62%)' : 'hsla(258, 30%, 30%, 0.5)', color: 'white' }}>
+                    {tip.icon}
+                  </div>
+                  <span className="text-sm text-foreground">{tip.text}</span>
+                </div>
+              ))}
+              <div className="flex gap-2 mt-3">
+                {onboardingStep > 0 && (
+                  <button onClick={() => setOnboardingStep(s => s - 1)}
+                    className="px-4 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
+                    <ChevronLeft className="w-3 h-3 inline" /> Back
+                  </button>
+                )}
+                <button onClick={() => {
+                  if (onboardingStep < 2) setOnboardingStep(s => s + 1);
+                  else { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); }
+                }}
+                  className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
+                  style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                  {onboardingStep < 2 ? "Next" : "Got it! 🚀"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== STREAK HERO ===== */}
         <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
           <div className="flex items-center justify-between">
@@ -488,6 +560,27 @@ const Dashboard = () => {
               <div className="absolute inset-0 rounded-full blur-xl opacity-40"
                 style={{ background: 'hsla(25, 100%, 55%, 0.6)' }} />
             </div>
+          </div>
+
+          {/* Streak Shield */}
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={() => {
+                if (!streakShieldAvailable) return;
+                localStorage.setItem("gm-shield-used", String(Date.now()));
+                setStreakShieldAvailable(false);
+                toast({ title: "🛡️ Streak Shield activated! +5 XP" });
+              }}
+              disabled={!streakShieldAvailable}
+              className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
+                streakShieldAvailable
+                  ? "glass-card text-foreground hover:bg-primary/10"
+                  : "opacity-40 glass-card text-muted-foreground"
+              )}
+            >
+              <Shield className={cn("w-3.5 h-3.5", streakShieldAvailable ? "text-primary" : "text-muted-foreground")} />
+              {streakShieldAvailable ? "🛡️ 1 shield available" : "Shield used this week"}
+            </button>
           </div>
         </div>
 
@@ -594,9 +687,18 @@ const Dashboard = () => {
                 <textarea
                   value={checkinText}
                   onChange={(e) => setCheckinText(e.target.value)}
-                  placeholder="What did you do today for your goal?"
+                  placeholder="What did you do today for your goal? (min 6 words)"
                   className="w-full h-20 bg-transparent border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 resize-none transition-all"
                 />
+
+                <div className="mt-1 flex items-center justify-between px-1">
+                  <span className={cn("text-[10px] font-semibold", wordCount >= 6 ? "text-primary" : "text-muted-foreground")}>
+                    {wordCount}/6 words minimum
+                  </span>
+                  {wordCount > 0 && wordCount < 6 && (
+                    <span className="text-[10px] text-destructive">Please write at least 6 words</span>
+                  )}
+                </div>
 
                 {/* Photo preview */}
                 {checkinPhotoPreview && (
@@ -622,13 +724,13 @@ const Dashboard = () => {
 
                 <button
                   onClick={handleCheckin}
-                  disabled={!checkinText.trim()}
+                  disabled={wordCount < 6}
                   className="mt-3 w-full py-3.5 rounded-full text-sm font-bold text-primary-foreground transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97]"
                   style={{
-                    background: checkinText.trim()
+                    background: wordCount >= 6
                       ? 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 58%))'
                       : 'hsla(258, 30%, 30%, 0.5)',
-                    boxShadow: checkinText.trim()
+                    boxShadow: wordCount >= 6
                       ? '0 0 30px hsla(258, 100%, 62%, 0.4), inset 0 1px 0 hsla(0, 0%, 100%, 0.15)'
                       : 'none',
                   }}
@@ -678,7 +780,17 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-3">Motivate each other 💪</p>
+                {/* Buddy Status */}
+                <div className="mt-2 flex items-center gap-1.5">
+                  {matchProfile.streak >= 7 ? (
+                    <span className="text-[11px] font-semibold text-secondary">🔥 On a streak!</span>
+                  ) : buddyCheckedInToday ? (
+                    <span className="text-[11px] font-semibold" style={{ color: '#00E5A0' }}>🟢 Active today</span>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-muted-foreground">😴 Not checked in yet</span>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">Motivate each other 💪</p>
                 <button
                   onClick={() => navigate(`/chat/${match?.id}`)}
                   className="mt-3 w-full py-2.5 rounded-full text-sm font-bold text-foreground transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
@@ -841,11 +953,20 @@ const Dashboard = () => {
         {/* ===== MOTIVATION ===== */}
         <div className={fadeClass(8)} style={{ transitionDelay: '500ms' }}>
           <div className="rounded-2xl p-4 border border-border/30" style={{ background: 'hsla(258, 20%, 10%, 0.4)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary/70" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Today's Motivation</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Today's Motivation</span>
+              </div>
+              <button onClick={() => {
+                const text = `${todayQuote.en} — ${todayQuote.hi} ${todayQuote.emoji}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n\n— GoalMate 🎯")}`, "_blank");
+              }} className="p-1.5 rounded-full hover:bg-muted/50 transition-colors">
+                <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
             </div>
-            <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">"{todayQuote}"</p>
+            <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">"{todayQuote.en}" {todayQuote.emoji}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1 italic">"{todayQuote.hi}"</p>
           </div>
         </div>
 
