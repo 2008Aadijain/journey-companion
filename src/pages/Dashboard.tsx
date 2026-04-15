@@ -844,11 +844,20 @@ const Dashboard = () => {
         {/* ===== MOTIVATION ===== */}
         <div className={fadeClass(8)} style={{ transitionDelay: '500ms' }}>
           <div className="rounded-2xl p-4 border border-border/30" style={{ background: 'hsla(258, 20%, 10%, 0.4)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary/70" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Today's Motivation</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Today's Motivation</span>
+              </div>
+              <button onClick={() => {
+                const text = `${todayQuote.en} — ${todayQuote.hi} ${todayQuote.emoji}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n\n— GoalMate 🎯")}`, "_blank");
+              }} className="p-1.5 rounded-full hover:bg-muted/50 transition-colors">
+                <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
             </div>
-            <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">"{todayQuote}"</p>
+            <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">"{todayQuote.en}" {todayQuote.emoji}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1 italic">"{todayQuote.hi}"</p>
           </div>
         </div>
 
