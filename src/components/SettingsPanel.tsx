@@ -123,8 +123,18 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
   };
 
   const handleDeleteAccount = async () => {
-    // Delete profile and sign out (full deletion requires admin)
+    // Delete all user data
+    await supabase.from("check_ins").delete().eq("user_id", user.id);
+    await supabase.from("direct_messages").delete().eq("sender_id", user.id);
+    await supabase.from("friend_requests").delete().or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+    await supabase.from("matches").delete().or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+    await supabase.from("user_preferences").delete().eq("user_id", user.id);
     await supabase.from("profiles").delete().eq("user_id", user.id);
+    localStorage.removeItem("gm-gemini-key");
+    localStorage.removeItem("gm-ai-activated");
+    localStorage.removeItem("gm-ai-popup-shown");
+    localStorage.removeItem("gm-onboarding-done");
+    localStorage.removeItem("gm-shield-used");
     await supabase.auth.signOut();
     toast({ title: "Account deleted" });
     onClose();
@@ -149,7 +159,7 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg rounded-t-3xl overflow-hidden animate-in slide-in-from-bottom duration-300"
-        style={{ background: 'hsl(270 50% 6%)', border: '1px solid hsla(258, 60%, 40%, 0.2)', maxHeight: '85vh' }}>
+        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', maxHeight: '85vh' }}>
         
         <div className="flex items-center justify-between px-5 py-4 border-b border-border/30">
           <h2 className="text-lg font-bold text-foreground">Settings</h2>
@@ -432,13 +442,24 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
             <span className="flex-1 text-sm font-medium text-destructive/60">Delete Account</span>
           </button>
           {showDeleteConfirm && (
-            <div className="px-8 pb-3">
-              <p className="text-xs text-destructive mb-2">This will permanently delete your profile and data. Are you sure?</p>
-              <div className="flex gap-2">
-                <button onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">Cancel</button>
-                <button onClick={handleDeleteAccount}
-                  className="px-4 py-2 rounded-full text-xs font-bold bg-destructive text-destructive-foreground">Yes, Delete</button>
+            <div className="px-4 pb-3">
+              <div className="p-4 rounded-xl border border-destructive/30" style={{ background: 'hsla(0, 80%, 50%, 0.06)' }}>
+                <p className="text-sm font-bold text-destructive mb-3">Are you sure? This will:</p>
+                <div className="space-y-1.5 mb-4">
+                  <p className="text-xs text-destructive/80">❌ Delete all your goals</p>
+                  <p className="text-xs text-destructive/80">❌ Delete all your streaks</p>
+                  <p className="text-xs text-destructive/80">❌ Delete all your messages</p>
+                  <p className="text-xs text-destructive/80">❌ Remove you from all groups</p>
+                </div>
+                <p className="text-[10px] text-destructive/60 mb-3">This cannot be undone!</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 px-4 py-2.5 rounded-full text-xs font-semibold glass-card text-muted-foreground">Cancel</button>
+                  <button onClick={handleDeleteAccount}
+                    className="flex-1 px-4 py-2.5 rounded-full text-xs font-bold bg-destructive text-destructive-foreground">
+                    Yes, Delete Everything
+                  </button>
+                </div>
               </div>
             </div>
           )}
