@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Flame, Trophy, Share2, LogOut, Zap, Camera } from "lucide-react";
+import { ArrowLeft, Flame, Trophy, Share2, LogOut, Zap, Camera, Users as UsersIcon, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
@@ -20,12 +20,20 @@ const ALL_BADGES = [
   { name: "GoalMate Champion", emoji: "🏆", description: "30 day streak", threshold: 30 },
 ];
 
+const getLevelTitle = (xp: number): { title: string; emoji: string } => {
+  if (xp >= 1000) return { title: "Champion", emoji: "🏆" };
+  if (xp >= 501) return { title: "Achiever", emoji: "⚡" };
+  if (xp >= 101) return { title: "Explorer", emoji: "🚀" };
+  return { title: "Beginner", emoji: "🌱" };
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [friendCount, setFriendCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,6 +47,15 @@ const Profile = () => {
       if (data) setAchievements(data);
     };
     fetchAchievements();
+    // friend count
+    (async () => {
+      const { data } = await supabase
+        .from("friend_requests")
+        .select("id")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq("status", "accepted");
+      setFriendCount(data?.length || 0);
+    })();
   }, [user]);
 
   useEffect(() => {
