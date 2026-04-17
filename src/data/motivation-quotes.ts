@@ -1,32 +1,24 @@
-export const MOTIVATION_QUOTES = [
-  { en: "Small steps every day lead to big results.", hi: "Har din chhote kadam bade natijon ki taraf le jaate hain.", emoji: "🚀" },
-  { en: "You didn't come this far to only come this far.", hi: "Tum itni door sirf itna paane ke liye nahi aaye.", emoji: "💪" },
-  { en: "Discipline is choosing what you want most over what you want now.", hi: "Discipline ka matlab hai — jo abhi chahiye usse zyada, jo sabse zyada chahiye use chunna.", emoji: "🎯" },
-  { en: "The secret of getting ahead is getting started.", hi: "Aage badhne ka raaz hai — shuru karna.", emoji: "⚡" },
-  { en: "Progress, not perfection.", hi: "Progress chahiye, perfection nahi.", emoji: "🌟" },
-  { en: "Your future self will thank you.", hi: "Tera future wala tu tujhe thank you bolega.", emoji: "🔥" },
-  { en: "Consistency beats intensity. Every single time.", hi: "Consistency intensity ko har baar harati hai.", emoji: "💎" },
-  { en: "One day or day one — you decide.", hi: "Ek din ya pehla din — tu decide kar.", emoji: "🏆" },
-  { en: "Success is the sum of small efforts repeated day in and day out.", hi: "Safalta chhoti mehnat ka sum hai jo roz repeat hota hai.", emoji: "📈" },
-  { en: "Don't stop until you're proud.", hi: "Tab tak mat ruk jab tak proud na ho.", emoji: "🦁" },
-  { en: "Every expert was once a beginner.", hi: "Har expert kabhi beginner tha.", emoji: "🌱" },
-  { en: "Hard work beats talent when talent doesn't work hard.", hi: "Mehnat talent ko tab harati hai jab talent mehnat nahi karta.", emoji: "⭐" },
-  { en: "Believe you can and you're halfway there.", hi: "Vishwas karo ki tum kar sakte ho aur tum aadhe raaste par ho.", emoji: "✨" },
-  { en: "The only way to do great work is to love what you do.", hi: "Achha kaam karne ka ek hi tarika hai — jo karo use pyaar karo.", emoji: "❤️" },
-  { en: "Dream big. Start small. Act now.", hi: "Bada sapna dekho. Chhota shuru karo. Abhi karo.", emoji: "🎬" },
-  { en: "Your limitation is only your imagination.", hi: "Teri limitation sirf teri imagination hai.", emoji: "🧠" },
-  { en: "Push yourself, because no one else is going to do it for you.", hi: "Khud ko push karo, kyunki koi aur tere liye nahi karega.", emoji: "🏋️" },
-  { en: "Great things never come from comfort zones.", hi: "Badi cheezein comfort zone se kabhi nahi aati.", emoji: "🚀" },
-  { en: "It always seems impossible until it's done.", hi: "Ye hamesha impossible lagta hai jab tak ho nahi jaata.", emoji: "💡" },
-  { en: "Don't wish for it. Work for it.", hi: "Wish mat karo. Kaam karo.", emoji: "🔨" },
-  { en: "Success doesn't come from what you do occasionally, but what you do consistently.", hi: "Safalta kabhi kabhi karne se nahi, consistently karne se aati hai.", emoji: "📊" },
-  { en: "Fall seven times, stand up eight.", hi: "Saat baar giro, aath baar uthho.", emoji: "💪" },
-  { en: "The best time to start was yesterday. The next best time is now.", hi: "Shuru karne ka sabse achha time kal tha. Uske baad abhi hai.", emoji: "⏰" },
-  { en: "Action is the foundational key to all success.", hi: "Action har safalta ki neenv hai.", emoji: "🔑" },
-  { en: "Be stronger than your excuses.", hi: "Apne bahanon se zyada mazboot bano.", emoji: "💎" },
-  { en: "A little progress each day adds up to big results.", hi: "Har din ki thodi progress bade result deti hai.", emoji: "📈" },
-  { en: "You don't have to be perfect to be amazing.", hi: "Amazing hone ke liye perfect hona zaroori nahi.", emoji: "🌈" },
-  { en: "Work hard in silence, let success make the noise.", hi: "Chupchap mehnat karo, safalta khud awaaz karegi.", emoji: "🤫" },
-  { en: "Stay hungry, stay foolish.", hi: "Bhookhe raho, bewakoof raho.", emoji: "🍎" },
-  { en: "Your only limit is you.", hi: "Teri sirf ek limit hai — tu khud.", emoji: "🎯" },
+export interface Quote {
+  en: string;
+  hi: string;
+  emoji: string;
+}
+
+// 15 Hindi + 15 English (paired by index but text is independent per language)
+export const MOTIVATION_QUOTES: Quote[] = [
+  { en: "Small steps every day lead to big results.", hi: "हर बड़ी सफलता छोटे कदमों से शुरू होती है।", emoji: "🚀" },
+  { en: "Your only competition is yesterday's you.", hi: "आज का प्रयास कल की सफलता है।", emoji: "💪" },
+  { en: "Progress, not perfection.", hi: "रुको मत, चलते रहो।", emoji: "🌟" },
+  { en: "Show up even when you don't feel like it.", hi: "मेहनत कभी बेकार नहीं जाती।", emoji: "🔥" },
+  { en: "The streak you protect today builds the life you want tomorrow.", hi: "अपने सपनों पर भरोसा रखो।", emoji: "🛡️" },
+  { en: "Consistency beats talent every time.", hi: "एक कदम रोज़ाना, मंज़िल करीब लाता है।", emoji: "💎" },
+  { en: "One day or day one — you decide.", hi: "कोशिश करने वाले कभी हारते नहीं।", emoji: "🏆" },
+  { en: "Don't stop when you're tired, stop when you're done.", hi: "आज बेहतर करो, कल और बेहतर होगा।", emoji: "📈" },
+  { en: "Your future self is watching. Make them proud.", hi: "सफलता धैर्य का फल है।", emoji: "🦁" },
+  { en: "Every expert was once a beginner.", hi: "जो सोचते हो वो करो, जो करो उसमें जान लगाओ।", emoji: "🌱" },
+  { en: "The pain of discipline is less than the pain of regret.", hi: "हार मत मानो, सुबह ज़रूर होगी।", emoji: "⭐" },
+  { en: "You don't have to be great to start, but you have to start to be great.", hi: "छोटी जीत भी जीत होती है।", emoji: "✨" },
+  { en: "Focus on progress, not perfection.", hi: "खुद पर विश्वास रखो।", emoji: "🎯" },
+  { en: "Dream it. Plan it. Do it.", hi: "आगे बढ़ते रहो, रास्ता खुद बनता है।", emoji: "🎬" },
+  { en: "GoalMate today. Champion tomorrow.", hi: "आज का GoalMate कल का champion है।", emoji: "🏅" },
 ];

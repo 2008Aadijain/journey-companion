@@ -4,13 +4,16 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/hooks/useI18n";
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useI18n();
   const [pendingFriendCount, setPendingFriendCount] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [poppingPath, setPoppingPath] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -22,7 +25,6 @@ const BottomNav = () => {
         .eq("status", "pending");
       setPendingFriendCount(friendCount || 0);
 
-      // Count unread DMs
       const { data: matches } = await supabase
         .from("matches")
         .select("id")
@@ -47,27 +49,38 @@ const BottomNav = () => {
   }, [user, location.pathname]);
 
   const items = [
-    { icon: Target, label: "Home", path: "/dashboard" },
-    { icon: Globe, label: "Wall", path: "/progress-wall" },
-    { icon: MessageCircle, label: "Chat", path: "/chats", badge: unreadMessages },
-    { icon: Users, label: "Friends", path: "/friends", badge: pendingFriendCount },
-    { icon: User, label: "Profile", path: "/profile" },
+    { icon: Target, label: t("home"), path: "/dashboard" },
+    { icon: Globe, label: t("wall"), path: "/progress-wall" },
+    { icon: MessageCircle, label: t("chat"), path: "/chats", badge: unreadMessages },
+    { icon: Users, label: t("friends"), path: "/friends", badge: pendingFriendCount },
+    { icon: User, label: t("profile"), path: "/profile" },
   ];
+
+  const handleNav = (path: string) => {
+    setPoppingPath(path);
+    setTimeout(() => setPoppingPath(null), 350);
+    navigate(path);
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-background/95 backdrop-blur-sm">
       <div className="flex items-center justify-around max-w-lg mx-auto py-2.5">
         {items.map((item) => {
-          const isActive = location.pathname === item.path || 
+          const isActive = location.pathname === item.path ||
             (item.path === "/chats" && location.pathname.startsWith("/chat"));
+          const popping = poppingPath === item.path;
           return (
-            <button key={item.label} onClick={() => navigate(item.path)}
+            <button key={item.label} onClick={() => handleNav(item.path)}
               className="flex flex-col items-center gap-0.5 px-3 py-1.5 transition-colors relative"
             >
-              <item.icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground/60")} />
+              <item.icon className={cn(
+                "w-5 h-5 transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground/60",
+                popping && "animate-nav-pop"
+              )} />
               <span className={cn("text-[10px] font-bold", isActive ? "text-primary" : "text-muted-foreground/60")}>{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <span className="absolute -top-0.5 right-0 w-4 h-4 rounded-full bg-secondary text-secondary-foreground text-[8px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 right-0 w-4 h-4 rounded-full bg-secondary text-secondary-foreground text-[8px] font-bold flex items-center justify-center animate-badge-bounce">
                   {item.badge}
                 </span>
               )}

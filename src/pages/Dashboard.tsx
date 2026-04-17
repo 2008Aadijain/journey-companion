@@ -14,6 +14,7 @@ import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
 import AiKeyPopup from "@/components/AiKeyPopup";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/hooks/useI18n";
 
 const SMART_NUDGES: Record<string, string[]> = {
   Learning: [
@@ -98,6 +99,9 @@ const Dashboard = () => {
   const [buddyCheckedInToday, setBuddyCheckedInToday] = useState<boolean | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { t, lang } = useI18n();
+  const [shieldJustUsed, setShieldJustUsed] = useState(false);
+  const [showShieldTooltip, setShowShieldTooltip] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -458,7 +462,7 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             {/* XP Badge */}
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full"
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full animate-xp-pulse"
               style={{ background: 'hsla(258, 80%, 50%, 0.15)', border: '1px solid hsla(258, 100%, 62%, 0.2)' }}>
               <Zap className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-black text-primary">{profile.xp ?? 0}</span>
@@ -503,84 +507,112 @@ const Dashboard = () => {
         )}
 
         {/* ===== ONBOARDING TIPS ===== */}
-        {showOnboarding && (
-          <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
-            <div className="rounded-2xl p-5 border border-primary/30" style={{ background: 'hsla(258, 40%, 15%, 0.6)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-bold text-foreground">👋 Welcome! Here's how GoalMate works</span>
-                <button onClick={() => { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); }}
-                  className="text-xs text-muted-foreground hover:text-foreground">Skip</button>
-              </div>
-              {[
-                { text: "Check in daily to build your streak 🔥", icon: "1" },
-                { text: "Your GoalMate will keep you accountable 🤝", icon: "2" },
-                { text: "Earn XP and climb the leaderboard 🏆", icon: "3" },
-              ].map((tip, i) => (
-                <div key={i} className={cn("flex items-center gap-3 py-2 transition-all duration-500",
-                  i === onboardingStep ? "opacity-100" : "opacity-40")}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: i === onboardingStep ? 'hsl(258 100% 62%)' : 'hsla(258, 30%, 30%, 0.5)', color: 'white' }}>
-                    {tip.icon}
-                  </div>
-                  <span className="text-sm text-foreground">{tip.text}</span>
+        {showOnboarding && (() => {
+          const TIPS = [
+            { title: "Welcome to GoalMate! 👋", body: "The app that helps you achieve goals with a partner." },
+            { title: "Build your streak 🔥", body: "Check in daily — miss a day and your streak resets!" },
+            { title: "Stay accountable 🤝", body: "Your GoalMate is here to motivate you. Chat anytime!" },
+            { title: "Earn XP & badges 🏆", body: "Climb the leaderboard and show your progress to the world." },
+            { title: "Activate AI Power ✨", body: "Add your free Gemini key for personalized tasks and videos." },
+          ];
+          const close = () => { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); };
+          return (
+            <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
+              <div className="rounded-2xl p-5 border border-primary/30 animate-in fade-in slide-in-from-top-2 duration-500"
+                style={{ background: 'hsla(258, 40%, 15%, 0.6)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Tip {onboardingStep + 1} / {TIPS.length}</span>
+                  <button onClick={close} className="text-xs text-muted-foreground hover:text-foreground">Skip</button>
                 </div>
-              ))}
-              <div className="flex gap-2 mt-3">
-                {onboardingStep > 0 && (
-                  <button onClick={() => setOnboardingStep(s => s - 1)}
-                    className="px-4 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
-                    <ChevronLeft className="w-3 h-3 inline" /> Back
+                <h3 className="text-base font-black text-foreground mb-1.5">{TIPS[onboardingStep].title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{TIPS[onboardingStep].body}</p>
+                {/* Dot indicators */}
+                <div className="flex items-center justify-center gap-1.5 my-4">
+                  {TIPS.map((_, i) => (
+                    <span key={i}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: i === onboardingStep ? 18 : 6,
+                        height: 6,
+                        background: i === onboardingStep ? 'hsl(258 100% 62%)' : 'hsla(258, 30%, 50%, 0.3)',
+                      }} />
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  {onboardingStep > 0 && (
+                    <button onClick={() => setOnboardingStep(s => s - 1)}
+                      className="px-4 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
+                      <ChevronLeft className="w-3 h-3 inline" /> Back
+                    </button>
+                  )}
+                  <button onClick={() => {
+                    if (onboardingStep < TIPS.length - 1) setOnboardingStep(s => s + 1);
+                    else close();
+                  }}
+                    className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
+                    style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                    {onboardingStep < TIPS.length - 1 ? "Next →" : "Got it! 🚀"}
                   </button>
-                )}
-                <button onClick={() => {
-                  if (onboardingStep < 2) setOnboardingStep(s => s + 1);
-                  else { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); }
-                }}
-                  className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
-                  style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
-                  {onboardingStep < 2 ? "Next" : "Got it! 🚀"}
-                </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ===== STREAK HERO ===== */}
         <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your streak</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">{t("your_streak")}</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-foreground leading-none">{profile.streak}</span>
-                <span className="text-lg text-muted-foreground font-semibold">days</span>
+                <span className="text-lg text-muted-foreground font-semibold">{t("days")}</span>
               </div>
             </div>
             <div className="relative">
-              <div className="text-5xl animate-[breathe_3s_ease-in-out_infinite]">🔥</div>
+              <div className="text-5xl animate-flame-flicker">🔥</div>
               <div className="absolute inset-0 rounded-full blur-xl opacity-40"
                 style={{ background: 'hsla(25, 100%, 55%, 0.6)' }} />
             </div>
           </div>
 
           {/* Streak Shield */}
-          <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center gap-3 mt-3 relative">
             <button
               onClick={() => {
-                if (!streakShieldAvailable) return;
+                if (!streakShieldAvailable) {
+                  setShowShieldTooltip(s => !s);
+                  return;
+                }
                 localStorage.setItem("gm-shield-used", String(Date.now()));
                 setStreakShieldAvailable(false);
-                toast({ title: "🛡️ Streak Shield activated! +5 XP" });
+                setShieldJustUsed(true);
+                setTimeout(() => setShieldJustUsed(false), 1200);
+                toast({ title: "🛡️ Shield activated! Streak saved! +5 XP" });
+                if (user && profile) {
+                  supabase.from("profiles").update({ xp: (profile.xp ?? 0) + 5 }).eq("user_id", user.id).then(() => refreshProfile());
+                }
               }}
-              disabled={!streakShieldAvailable}
+              onMouseEnter={() => setShowShieldTooltip(true)}
+              onMouseLeave={() => setShowShieldTooltip(false)}
               className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
                 streakShieldAvailable
                   ? "glass-card text-foreground hover:bg-primary/10"
-                  : "opacity-40 glass-card text-muted-foreground"
+                  : "opacity-50 glass-card text-muted-foreground"
               )}
             >
-              <Shield className={cn("w-3.5 h-3.5", streakShieldAvailable ? "text-primary" : "text-muted-foreground")} />
-              {streakShieldAvailable ? "🛡️ 1 shield available" : "Shield used this week"}
+              <Shield className={cn("w-3.5 h-3.5",
+                streakShieldAvailable ? "text-primary" : "text-muted-foreground",
+                shieldJustUsed && "animate-shield-activate"
+              )} />
+              {streakShieldAvailable ? t("shield_available") : t("shield_used")}
             </button>
+            {showShieldTooltip && (
+              <div className="absolute top-full left-0 mt-2 z-30 px-3 py-2 rounded-xl text-[11px] font-medium max-w-xs animate-in fade-in slide-in-from-top-1 duration-200"
+                style={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+                {t("shield_tooltip")}
+              </div>
+            )}
           </div>
         </div>
 
@@ -603,7 +635,7 @@ const Dashboard = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Target className="w-4 h-4 text-primary" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">My Goal</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">{t("my_goal")}</span>
                   </div>
                   <h2 className="text-2xl font-black text-foreground leading-tight">{profile.goal_label}</h2>
                 </div>
@@ -613,9 +645,9 @@ const Dashboard = () => {
               <div className="flex items-center gap-5 mb-4">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-primary/60" />
-                  <span className="text-xs text-foreground/70 font-medium">Day {calculatedDay}</span>
+                  <span className="text-xs text-foreground/70 font-medium">{t("day")} {calculatedDay}</span>
                 </div>
-                <span className="text-xs text-foreground/70 font-medium">{daysLeft} days left</span>
+                <span className="text-xs text-foreground/70 font-medium">{daysLeft} {t("days_left")}</span>
               </div>
 
               <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'hsla(258, 40%, 30%, 0.5)' }}>
@@ -627,7 +659,7 @@ const Dashboard = () => {
                   }}
                 />
               </div>
-              <p className="text-[11px] text-foreground/50 mt-2 font-medium">{progress}% complete</p>
+              <p className="text-[11px] text-foreground/50 mt-2 font-medium">{progress}% {t("complete")}</p>
             </div>
           </div>
         </div>
@@ -637,7 +669,7 @@ const Dashboard = () => {
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(258, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Play className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">Learning Resources</span>
+              <span className="text-sm font-bold text-foreground">{t("learning_resources")}</span>
               {aiActivated && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
                   style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
@@ -672,31 +704,31 @@ const Dashboard = () => {
         <div className={fadeClass(3)} style={{ transitionDelay: '250ms' }}>
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(258, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
-              <Flame className="w-4 h-4 text-secondary" />
-              <span className="text-sm font-bold text-foreground">Daily Check-in</span>
+              <Flame className="w-4 h-4 text-secondary animate-flame-flicker" />
+              <span className="text-sm font-bold text-foreground">{t("daily_checkin")}</span>
             </div>
 
             {todayCheckedIn ? (
               <div className="text-center py-5">
                 <div className="text-5xl mb-3 animate-[breathe_3s_ease-in-out_infinite]">✅</div>
-                <p className="text-foreground font-bold text-lg">Already checked in!</p>
-                <p className="text-muted-foreground text-xs mt-1.5">See you tomorrow — keep the streak alive 🔥</p>
+                <p className="text-foreground font-bold text-lg">{t("already_checked_in")}</p>
+                <p className="text-muted-foreground text-xs mt-1.5">{t("see_you_tomorrow")}</p>
               </div>
             ) : (
               <>
                 <textarea
                   value={checkinText}
                   onChange={(e) => setCheckinText(e.target.value)}
-                  placeholder="What did you do today for your goal? (min 6 words)"
+                  placeholder={t("checkin_placeholder")}
                   className="w-full h-20 bg-transparent border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 resize-none transition-all"
                 />
 
                 <div className="mt-1 flex items-center justify-between px-1">
                   <span className={cn("text-[10px] font-semibold", wordCount >= 6 ? "text-primary" : "text-muted-foreground")}>
-                    {wordCount}/6 words minimum
+                    {wordCount}/6 {t("words_min")}
                   </span>
                   {wordCount > 0 && wordCount < 6 && (
-                    <span className="text-[10px] text-destructive">Please write at least 6 words</span>
+                    <span className="text-[10px] text-destructive">{t("please_write_6")}</span>
                   )}
                 </div>
 
@@ -716,7 +748,7 @@ const Dashboard = () => {
                   <button onClick={() => photoInputRef.current?.click()}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold glass-card text-muted-foreground hover:text-foreground transition-all">
                     <Camera className="w-3.5 h-3.5" />
-                    Add proof 📸 (optional)
+                    {t("add_proof")}
                   </button>
                   {checkinPhoto && <span className="text-[10px] text-primary font-semibold">+5 XP bonus!</span>}
                   <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
@@ -725,17 +757,20 @@ const Dashboard = () => {
                 <button
                   onClick={handleCheckin}
                   disabled={wordCount < 6}
-                  className="mt-3 w-full py-3.5 rounded-full text-sm font-bold text-primary-foreground transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97]"
+                  className={cn(
+                    "mt-3 w-full py-3.5 rounded-full text-sm font-bold text-primary-foreground transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97]",
+                    wordCount >= 6 && "animate-shimmer-btn"
+                  )}
                   style={{
                     background: wordCount >= 6
-                      ? 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 58%))'
+                      ? undefined
                       : 'hsla(258, 30%, 30%, 0.5)',
                     boxShadow: wordCount >= 6
                       ? '0 0 30px hsla(258, 100%, 62%, 0.4), inset 0 1px 0 hsla(0, 0%, 100%, 0.15)'
                       : 'none',
                   }}
                 >
-                  Check In ✅ (+10 XP{checkinPhoto ? " +5 📸" : ""})
+                  {t("check_in")} ✅ (+10 XP{checkinPhoto ? " +5 📸" : ""})
                 </button>
               </>
             )}
@@ -752,7 +787,7 @@ const Dashboard = () => {
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(270, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">Your GoalMate</span>
+              <span className="text-sm font-bold text-foreground">{t("your_goalmate")}</span>
             </div>
 
             {matchProfile ? (
@@ -783,11 +818,11 @@ const Dashboard = () => {
                 {/* Buddy Status */}
                 <div className="mt-2 flex items-center gap-1.5">
                   {matchProfile.streak >= 7 ? (
-                    <span className="text-[11px] font-semibold text-secondary">🔥 On a streak!</span>
+                    <span className="text-[11px] font-semibold text-secondary">{t("on_streak")}</span>
                   ) : buddyCheckedInToday ? (
-                    <span className="text-[11px] font-semibold" style={{ color: '#00E5A0' }}>🟢 Active today</span>
+                    <span className="text-[11px] font-semibold" style={{ color: '#00E5A0' }}>{t("active_today")}</span>
                   ) : (
-                    <span className="text-[11px] font-semibold text-muted-foreground">😴 Not checked in yet</span>
+                    <span className="text-[11px] font-semibold text-muted-foreground">{t("not_checked_in")}</span>
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1">Motivate each other 💪</p>
@@ -815,7 +850,7 @@ const Dashboard = () => {
                     <div className="flex gap-2">
                       <button onClick={() => { setMateInactive(false); localStorage.setItem("gm-mate-inactive", "false"); }}
                         className="flex-1 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
-                        Keep Waiting
+                        {t("keep_waiting")}
                       </button>
                       <button onClick={async () => {
                         if (!match || !user || !profile) return;
@@ -847,7 +882,7 @@ const Dashboard = () => {
                       }}
                         className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
                         style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
-                        Find New Mate
+                        {t("find_new_mate")}
                       </button>
                     </div>
                   </div>
@@ -900,7 +935,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-base">📋</span>
-                  <span className="text-sm font-bold text-foreground">Today's Task</span>
+                  <span className="text-sm font-bold text-foreground">{t("todays_task")}</span>
                   {aiActivated && (
                     <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
                       style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
@@ -952,21 +987,25 @@ const Dashboard = () => {
 
         {/* ===== MOTIVATION ===== */}
         <div className={fadeClass(8)} style={{ transitionDelay: '500ms' }}>
-          <div className="rounded-2xl p-4 border border-border/30" style={{ background: 'hsla(258, 20%, 10%, 0.4)' }}>
+          <div className="rounded-2xl p-4 border border-border/30 animate-in fade-in duration-700"
+            style={{ background: 'hsla(258, 20%, 10%, 0.4)' }}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-primary/70" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Today's Motivation</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                  {lang === "hi" ? "आज का प्रेरणा" : "Today's Motivation"}
+                </span>
               </div>
               <button onClick={() => {
-                const text = `${todayQuote.en} — ${todayQuote.hi} ${todayQuote.emoji}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n\n— GoalMate 🎯")}`, "_blank");
+                const text = lang === "hi" ? todayQuote.hi : todayQuote.en;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + todayQuote.emoji + "\n\n— GoalMate 🎯")}`, "_blank");
               }} className="p-1.5 rounded-full hover:bg-muted/50 transition-colors">
                 <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             </div>
-            <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">"{todayQuote.en}" {todayQuote.emoji}</p>
-            <p className="text-xs text-muted-foreground/60 mt-1 italic">"{todayQuote.hi}"</p>
+            <p className="text-sm text-foreground/90 font-medium italic leading-relaxed">
+              "{lang === "hi" ? todayQuote.hi : todayQuote.en}" {todayQuote.emoji}
+            </p>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Flame, Trophy, Share2, LogOut, Zap, Camera } from "lucide-react";
+import { ArrowLeft, Flame, Trophy, Share2, LogOut, Zap, Camera, Users as UsersIcon, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
@@ -20,12 +20,20 @@ const ALL_BADGES = [
   { name: "GoalMate Champion", emoji: "🏆", description: "30 day streak", threshold: 30 },
 ];
 
+const getLevelTitle = (xp: number): { title: string; emoji: string } => {
+  if (xp >= 1000) return { title: "Champion", emoji: "🏆" };
+  if (xp >= 501) return { title: "Achiever", emoji: "⚡" };
+  if (xp >= 101) return { title: "Explorer", emoji: "🚀" };
+  return { title: "Beginner", emoji: "🌱" };
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [friendCount, setFriendCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,6 +47,15 @@ const Profile = () => {
       if (data) setAchievements(data);
     };
     fetchAchievements();
+    // friend count
+    (async () => {
+      const { data } = await supabase
+        .from("friend_requests")
+        .select("id")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq("status", "accepted");
+      setFriendCount(data?.length || 0);
+    })();
   }, [user]);
 
   useEffect(() => {
@@ -129,18 +146,23 @@ const Profile = () => {
 
       <main className="px-4 py-6 max-w-lg mx-auto space-y-5 pb-24">
         {/* Profile Card */}
-        <div className="glass-card-glow p-6 text-center">
+        <div className="glass-card-glow p-6 text-center animate-goalmate-glow">
           <div className="relative w-20 h-20 mx-auto mb-4">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-20 h-20 rounded-full object-cover" />
-            ) : (
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold"
-                style={{ background: 'linear-gradient(135deg, hsla(258, 100%, 62%, 0.3), hsla(0, 100%, 71%, 0.2))' }}>
-                {profile.name.charAt(0).toUpperCase()}
-              </div>
-            )}
+            <div className="absolute inset-0 rounded-full blur-xl opacity-60"
+              style={{ background: 'radial-gradient(circle, hsl(258 100% 62%), transparent 70%)' }} />
+            <div className="relative rounded-full p-[3px]"
+              style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 60%))' }}>
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="w-[74px] h-[74px] rounded-full object-cover border-2 border-background" />
+              ) : (
+                <div className="w-[74px] h-[74px] rounded-full flex items-center justify-center text-3xl font-bold border-2 border-background"
+                  style={{ background: 'linear-gradient(135deg, hsla(258, 100%, 62%, 0.3), hsla(0, 100%, 71%, 0.2))' }}>
+                  {profile.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
             <button onClick={() => fileRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-background"
+              className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-background z-10"
               style={{ background: 'hsl(258 100% 62%)' }}>
               <Camera className="w-3.5 h-3.5 text-white" />
             </button>
@@ -148,33 +170,62 @@ const Profile = () => {
               onChange={e => { if (e.target.files?.[0]) uploadAvatar(e.target.files[0]); }} />
           </div>
           {uploading && <p className="text-xs text-primary mb-2">Uploading...</p>}
-          <h2 className="text-xl font-bold text-foreground">{profile.name}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{profile.goal_label}</p>
-          <div className="flex items-center justify-center gap-6 mt-4">
+          <h2 className="text-2xl font-black text-foreground">{profile.name}</h2>
+          {(() => {
+            const lv = getLevelTitle(profile.xp ?? 0);
+            return (
+              <p className="text-xs font-bold mt-1.5 inline-flex items-center gap-1 px-3 py-1 rounded-full"
+                style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)', border: '1px solid hsla(258, 100%, 62%, 0.3)' }}>
+                {lv.emoji} {lv.title}
+              </p>
+            );
+          })()}
+          <p className="text-sm text-muted-foreground mt-2">{profile.goal_emoji} {profile.goal_label}</p>
+          <div className="grid grid-cols-4 gap-2 mt-5">
             <div className="text-center">
               <div className="flex items-center gap-1 justify-center">
-                <Flame className="w-4 h-4 text-secondary" />
-                <span className="text-lg font-bold text-foreground">{profile.streak}</span>
+                <Target className="w-3.5 h-3.5 text-primary" />
+                <span className="text-base font-bold text-foreground">1</span>
               </div>
-              <p className="text-xs text-muted-foreground">Streak</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Goals</p>
             </div>
-            <div className="w-px h-8 bg-border" />
             <div className="text-center">
               <div className="flex items-center gap-1 justify-center">
-                <Zap className="w-4 h-4 text-primary" />
-                <span className="text-lg font-bold text-foreground">{profile.xp ?? 0}</span>
+                <Flame className="w-3.5 h-3.5 text-secondary animate-flame-flicker" />
+                <span className="text-base font-bold text-foreground">{profile.streak}</span>
               </div>
-              <p className="text-xs text-muted-foreground">XP</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Streak</p>
             </div>
-            <div className="w-px h-8 bg-border" />
             <div className="text-center">
               <div className="flex items-center gap-1 justify-center">
-                <Trophy className="w-4 h-4 text-primary" />
-                <span className="text-lg font-bold text-foreground">{achievements.length}</span>
+                <Zap className="w-3.5 h-3.5 text-primary" />
+                <span className="text-base font-bold text-foreground">{profile.xp ?? 0}</span>
               </div>
-              <p className="text-xs text-muted-foreground">Badges</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">XP</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center gap-1 justify-center">
+                <UsersIcon className="w-3.5 h-3.5 text-primary" />
+                <span className="text-base font-bold text-foreground">{friendCount}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Friends</p>
             </div>
           </div>
+          <button
+            onClick={async () => {
+              const lv = getLevelTitle(profile.xp ?? 0);
+              const text = `🏆 I'm a ${lv.title} ${lv.emoji} on GoalMate!\n🔥 Streak: ${profile.streak} days\n⚡ XP: ${profile.xp ?? 0}\n🏅 Badges: ${achievements.length}\n\nJoin me on GoalMate!`;
+              if (navigator.share) {
+                try { await navigator.share({ title: "My GoalMate Profile", text }); } catch {}
+              } else {
+                await navigator.clipboard.writeText(text);
+              }
+            }}
+            className="mt-5 w-full py-2.5 rounded-full text-xs font-bold text-primary-foreground inline-flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}
+          >
+            <Share2 className="w-3.5 h-3.5" /> Share Profile
+          </button>
         </div>
 
         {/* Badges */}

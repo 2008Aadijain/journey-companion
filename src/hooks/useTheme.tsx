@@ -60,16 +60,17 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "light") {
-      root.style.setProperty("--background", "0 0% 100%");
-      root.style.setProperty("--foreground", "240 30% 10%");
-      root.style.setProperty("--card", "0 0% 100%");
-      root.style.setProperty("--card-foreground", "240 30% 10%");
+      // Pure white + soft purple light mode
+      root.style.setProperty("--background", "240 100% 98.5%"); // #F5F5FF-ish
+      root.style.setProperty("--foreground", "240 30% 14%"); // #1A1A2E
+      root.style.setProperty("--card", "0 0% 100%"); // pure white
+      root.style.setProperty("--card-foreground", "240 30% 14%");
       root.style.setProperty("--popover", "0 0% 100%");
-      root.style.setProperty("--popover-foreground", "240 30% 10%");
-      root.style.setProperty("--muted", "250 20% 96%");
-      root.style.setProperty("--muted-foreground", "250 15% 45%");
-      root.style.setProperty("--border", "250 20% 90%");
-      root.style.setProperty("--input", "250 20% 92%");
+      root.style.setProperty("--popover-foreground", "240 30% 14%");
+      root.style.setProperty("--muted", "245 60% 97%");
+      root.style.setProperty("--muted-foreground", "240 15% 38%"); // #4A4A6A
+      root.style.setProperty("--border", "245 80% 95%"); // #E8E8FF
+      root.style.setProperty("--input", "245 60% 95%");
       root.classList.add("light-mode");
       root.classList.remove("dark-mode");
     } else {

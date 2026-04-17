@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail, Bot, ExternalLink } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ const FONT_SIZES = [
 const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const { theme, accentColor, fontSize, setTheme, setAccentColor, setFontSize } = useTheme();
+  const { lang, setLang, t } = useI18n();
   const { toast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(profile?.name || "");
@@ -336,13 +338,24 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
           )}
 
           {/* Language */}
-          <button onClick={() => savePrefs({ language: prefs.language === "en" ? "hi" : "en" })}
-            className="w-full flex items-center gap-3 py-3 text-left">
+          <div className="flex items-center gap-3 py-3">
             <Globe className="w-5 h-5 text-muted-foreground" />
-            <span className="flex-1 text-sm font-medium text-foreground">Language</span>
-            <span className="text-xs text-muted-foreground">{prefs.language === "en" ? "English" : "हिंदी"}</span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
+            <span className="flex-1 text-sm font-medium text-foreground">{t("language")}</span>
+            <div className="flex gap-1 p-1 rounded-full" style={{ background: 'hsla(258, 30%, 30%, 0.15)' }}>
+              {([
+                { v: "en" as const, label: "EN" },
+                { v: "hi" as const, label: "हिं" },
+              ]).map(opt => (
+                <button key={opt.v}
+                  onClick={() => { setLang(opt.v); savePrefs({ language: opt.v }); }}
+                  className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all ${lang === opt.v ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  style={lang === opt.v ? { background: 'hsl(258 100% 62%)' } : undefined}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="h-px bg-border/30 my-1" />
 
