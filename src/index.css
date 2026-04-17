@@ -172,20 +172,68 @@
     background-clip: text;
   }
 
+  /* ===== LIGHT MODE — pure white cards + soft purple shadows ===== */
+  .light-mode {
+    background: #F5F5FF;
+  }
+  .light-mode body {
+    background: #F5F5FF;
+  }
   .light-mode .glass-card,
   .light-mode .glass-card-glow {
-    background: hsla(0, 0%, 100%, 0.8);
-    border-color: hsla(258, 40%, 80%, 0.3);
-    box-shadow: 0 2px 20px -5px hsla(258, 60%, 50%, 0.08);
+    background: #FFFFFF;
+    border: 1px solid #E8E8FF;
+    box-shadow: 0 2px 12px rgba(108, 59, 255, 0.08);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
-
   .light-mode .glass-card::before,
   .light-mode .glass-card-glow::before {
-    background: linear-gradient(135deg, hsla(258, 100%, 70%, 0.1) 0%, transparent 40%, transparent 60%, hsla(280, 80%, 60%, 0.05) 100%);
+    display: none;
   }
-
   .light-mode .glass-card-glow:hover {
-    box-shadow: 0 4px 30px -5px hsla(258, 60%, 50%, 0.15);
+    box-shadow: 0 4px 20px rgba(108, 59, 255, 0.15);
+    transform: translateY(-2px);
+  }
+  /* Generic dark inline backgrounds → make them white in light mode */
+  .light-mode [style*="hsla(258, 30%, 12%"],
+  .light-mode [style*="hsla(270, 30%, 12%"],
+  .light-mode [style*="hsla(258, 40%, 15%"] {
+    background: #FFFFFF !important;
+    border-color: #E8E8FF !important;
+    box-shadow: 0 2px 12px rgba(108, 59, 255, 0.08);
+  }
+  /* Bottom nav: white with subtle border */
+  .light-mode nav.fixed.bottom-0 {
+    background: #FFFFFF !important;
+    border-top: 1px solid #E8E8FF;
+    box-shadow: 0 -2px 12px rgba(108, 59, 255, 0.06);
+  }
+  /* Headers */
+  .light-mode header.sticky {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid #E8E8FF;
+  }
+  /* Section header text → purple */
+  .light-mode h1.text-gradient-hero,
+  .light-mode h2.text-gradient-hero,
+  .light-mode h3.text-gradient-hero {
+    background: linear-gradient(135deg, #6C3BFF 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  /* Inputs / textareas */
+  .light-mode input,
+  .light-mode textarea {
+    background: #F0F0FF !important;
+    border-color: #E8E8FF !important;
+    color: #1A1A2E !important;
+  }
+  /* Video / resource cards: white with purple left border */
+  .light-mode a[href*="youtube"] {
+    background: #FFFFFF;
+    border-left: 3px solid #6C3BFF !important;
   }
 
   .fade-up {
