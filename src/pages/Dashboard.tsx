@@ -462,7 +462,7 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             {/* XP Badge */}
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full"
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full animate-xp-pulse"
               style={{ background: 'hsla(258, 80%, 50%, 0.15)', border: '1px solid hsla(258, 100%, 62%, 0.2)' }}>
               <Zap className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-black text-primary">{profile.xp ?? 0}</span>
@@ -553,14 +553,14 @@ const Dashboard = () => {
         <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your streak</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">{t("your_streak")}</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-foreground leading-none">{profile.streak}</span>
-                <span className="text-lg text-muted-foreground font-semibold">days</span>
+                <span className="text-lg text-muted-foreground font-semibold">{t("days")}</span>
               </div>
             </div>
             <div className="relative">
-              <div className="text-5xl animate-[breathe_3s_ease-in-out_infinite]">🔥</div>
+              <div className="text-5xl animate-flame-flicker">🔥</div>
               <div className="absolute inset-0 rounded-full blur-xl opacity-40"
                 style={{ background: 'hsla(25, 100%, 55%, 0.6)' }} />
             </div>
