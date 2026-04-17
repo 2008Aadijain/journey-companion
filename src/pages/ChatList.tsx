@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import BottomNav from "@/components/BottomNav";
+import { useI18n } from "@/hooks/useI18n";
+import { toast } from "sonner";
 
 type Tab = "direct" | "groups" | "friends";
 
