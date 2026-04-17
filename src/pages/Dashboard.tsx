@@ -625,7 +625,7 @@ const Dashboard = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Target className="w-4 h-4 text-primary" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">My Goal</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">{t("my_goal")}</span>
                   </div>
                   <h2 className="text-2xl font-black text-foreground leading-tight">{profile.goal_label}</h2>
                 </div>
@@ -635,9 +635,9 @@ const Dashboard = () => {
               <div className="flex items-center gap-5 mb-4">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-primary/60" />
-                  <span className="text-xs text-foreground/70 font-medium">Day {calculatedDay}</span>
+                  <span className="text-xs text-foreground/70 font-medium">{t("day")} {calculatedDay}</span>
                 </div>
-                <span className="text-xs text-foreground/70 font-medium">{daysLeft} days left</span>
+                <span className="text-xs text-foreground/70 font-medium">{daysLeft} {t("days_left")}</span>
               </div>
 
               <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'hsla(258, 40%, 30%, 0.5)' }}>
@@ -649,7 +649,7 @@ const Dashboard = () => {
                   }}
                 />
               </div>
-              <p className="text-[11px] text-foreground/50 mt-2 font-medium">{progress}% complete</p>
+              <p className="text-[11px] text-foreground/50 mt-2 font-medium">{progress}% {t("complete")}</p>
             </div>
           </div>
         </div>
@@ -659,7 +659,7 @@ const Dashboard = () => {
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(258, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Play className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">Learning Resources</span>
+              <span className="text-sm font-bold text-foreground">{t("learning_resources")}</span>
               {aiActivated && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
                   style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
@@ -694,31 +694,31 @@ const Dashboard = () => {
         <div className={fadeClass(3)} style={{ transitionDelay: '250ms' }}>
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(258, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
-              <Flame className="w-4 h-4 text-secondary" />
-              <span className="text-sm font-bold text-foreground">Daily Check-in</span>
+              <Flame className="w-4 h-4 text-secondary animate-flame-flicker" />
+              <span className="text-sm font-bold text-foreground">{t("daily_checkin")}</span>
             </div>
 
             {todayCheckedIn ? (
               <div className="text-center py-5">
                 <div className="text-5xl mb-3 animate-[breathe_3s_ease-in-out_infinite]">✅</div>
-                <p className="text-foreground font-bold text-lg">Already checked in!</p>
-                <p className="text-muted-foreground text-xs mt-1.5">See you tomorrow — keep the streak alive 🔥</p>
+                <p className="text-foreground font-bold text-lg">{t("already_checked_in")}</p>
+                <p className="text-muted-foreground text-xs mt-1.5">{t("see_you_tomorrow")}</p>
               </div>
             ) : (
               <>
                 <textarea
                   value={checkinText}
                   onChange={(e) => setCheckinText(e.target.value)}
-                  placeholder="What did you do today for your goal? (min 6 words)"
+                  placeholder={t("checkin_placeholder")}
                   className="w-full h-20 bg-transparent border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 resize-none transition-all"
                 />
 
                 <div className="mt-1 flex items-center justify-between px-1">
                   <span className={cn("text-[10px] font-semibold", wordCount >= 6 ? "text-primary" : "text-muted-foreground")}>
-                    {wordCount}/6 words minimum
+                    {wordCount}/6 {t("words_min")}
                   </span>
                   {wordCount > 0 && wordCount < 6 && (
-                    <span className="text-[10px] text-destructive">Please write at least 6 words</span>
+                    <span className="text-[10px] text-destructive">{t("please_write_6")}</span>
                   )}
                 </div>
 
