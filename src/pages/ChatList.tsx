@@ -31,9 +31,11 @@ interface GroupConvo {
 const ChatList = () => {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("direct");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [groups, setGroups] = useState<GroupConvo[]>([]);
+  const [friendStatus, setFriendStatus] = useState<Record<string, "none" | "pending" | "accepted">>({});
 
   useEffect(() => {
     if (!loading && !user) navigate("/goal-setup");
@@ -86,6 +88,22 @@ const ChatList = () => {
         });
       }
       setConversations(convos);
+
+      // Load friend status for each chat partner
+      const partnerIds = convos.map(c => c.partnerId);
+      if (partnerIds.length > 0) {
+        const { data: reqs } = await supabase
+          .from("friend_requests")
+          .select("sender_id, receiver_id, status")
+          .or(`and(sender_id.eq.${user.id},receiver_id.in.(${partnerIds.join(",")})),and(receiver_id.eq.${user.id},sender_id.in.(${partnerIds.join(",")}))`);
+        const map: Record<string, "none" | "pending" | "accepted"> = {};
+        partnerIds.forEach(pid => { map[pid] = "none"; });
+        (reqs || []).forEach(r => {
+          const otherId = r.sender_id === user.id ? r.receiver_id : r.sender_id;
+          map[otherId] = r.status as "pending" | "accepted";
+        });
+        setFriendStatus(map);
+      }
     }
 
     // Load group conversations
