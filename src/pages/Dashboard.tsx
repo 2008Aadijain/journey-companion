@@ -567,24 +567,42 @@ const Dashboard = () => {
           </div>
 
           {/* Streak Shield */}
-          <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center gap-3 mt-3 relative">
             <button
               onClick={() => {
-                if (!streakShieldAvailable) return;
+                if (!streakShieldAvailable) {
+                  setShowShieldTooltip(s => !s);
+                  return;
+                }
                 localStorage.setItem("gm-shield-used", String(Date.now()));
                 setStreakShieldAvailable(false);
-                toast({ title: "🛡️ Streak Shield activated! +5 XP" });
+                setShieldJustUsed(true);
+                setTimeout(() => setShieldJustUsed(false), 1200);
+                toast({ title: "🛡️ Shield activated! Streak saved! +5 XP" });
+                if (user && profile) {
+                  supabase.from("profiles").update({ xp: (profile.xp ?? 0) + 5 }).eq("user_id", user.id).then(() => refreshProfile());
+                }
               }}
-              disabled={!streakShieldAvailable}
+              onMouseEnter={() => setShowShieldTooltip(true)}
+              onMouseLeave={() => setShowShieldTooltip(false)}
               className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
                 streakShieldAvailable
                   ? "glass-card text-foreground hover:bg-primary/10"
-                  : "opacity-40 glass-card text-muted-foreground"
+                  : "opacity-50 glass-card text-muted-foreground"
               )}
             >
-              <Shield className={cn("w-3.5 h-3.5", streakShieldAvailable ? "text-primary" : "text-muted-foreground")} />
-              {streakShieldAvailable ? "🛡️ 1 shield available" : "Shield used this week"}
+              <Shield className={cn("w-3.5 h-3.5",
+                streakShieldAvailable ? "text-primary" : "text-muted-foreground",
+                shieldJustUsed && "animate-shield-activate"
+              )} />
+              {streakShieldAvailable ? t("shield_available") : t("shield_used")}
             </button>
+            {showShieldTooltip && (
+              <div className="absolute top-full left-0 mt-2 z-30 px-3 py-2 rounded-xl text-[11px] font-medium max-w-xs animate-in fade-in slide-in-from-top-1 duration-200"
+                style={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+                {t("shield_tooltip")}
+              </div>
+            )}
           </div>
         </div>
 
