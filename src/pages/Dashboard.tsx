@@ -507,47 +507,57 @@ const Dashboard = () => {
         )}
 
         {/* ===== ONBOARDING TIPS ===== */}
-        {showOnboarding && (
-          <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
-            <div className="rounded-2xl p-5 border border-primary/30" style={{ background: 'hsla(258, 40%, 15%, 0.6)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-bold text-foreground">👋 Welcome! Here's how GoalMate works</span>
-                <button onClick={() => { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); }}
-                  className="text-xs text-muted-foreground hover:text-foreground">Skip</button>
-              </div>
-              {[
-                { text: "Check in daily to build your streak 🔥", icon: "1" },
-                { text: "Your GoalMate will keep you accountable 🤝", icon: "2" },
-                { text: "Earn XP and climb the leaderboard 🏆", icon: "3" },
-              ].map((tip, i) => (
-                <div key={i} className={cn("flex items-center gap-3 py-2 transition-all duration-500",
-                  i === onboardingStep ? "opacity-100" : "opacity-40")}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: i === onboardingStep ? 'hsl(258 100% 62%)' : 'hsla(258, 30%, 30%, 0.5)', color: 'white' }}>
-                    {tip.icon}
-                  </div>
-                  <span className="text-sm text-foreground">{tip.text}</span>
+        {showOnboarding && (() => {
+          const TIPS = [
+            { title: "Welcome to GoalMate! 👋", body: "The app that helps you achieve goals with a partner." },
+            { title: "Build your streak 🔥", body: "Check in daily — miss a day and your streak resets!" },
+            { title: "Stay accountable 🤝", body: "Your GoalMate is here to motivate you. Chat anytime!" },
+            { title: "Earn XP & badges 🏆", body: "Climb the leaderboard and show your progress to the world." },
+            { title: "Activate AI Power ✨", body: "Add your free Gemini key for personalized tasks and videos." },
+          ];
+          const close = () => { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); };
+          return (
+            <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
+              <div className="rounded-2xl p-5 border border-primary/30 animate-in fade-in slide-in-from-top-2 duration-500"
+                style={{ background: 'hsla(258, 40%, 15%, 0.6)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Tip {onboardingStep + 1} / {TIPS.length}</span>
+                  <button onClick={close} className="text-xs text-muted-foreground hover:text-foreground">Skip</button>
                 </div>
-              ))}
-              <div className="flex gap-2 mt-3">
-                {onboardingStep > 0 && (
-                  <button onClick={() => setOnboardingStep(s => s - 1)}
-                    className="px-4 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
-                    <ChevronLeft className="w-3 h-3 inline" /> Back
+                <h3 className="text-base font-black text-foreground mb-1.5">{TIPS[onboardingStep].title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{TIPS[onboardingStep].body}</p>
+                {/* Dot indicators */}
+                <div className="flex items-center justify-center gap-1.5 my-4">
+                  {TIPS.map((_, i) => (
+                    <span key={i}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: i === onboardingStep ? 18 : 6,
+                        height: 6,
+                        background: i === onboardingStep ? 'hsl(258 100% 62%)' : 'hsla(258, 30%, 50%, 0.3)',
+                      }} />
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  {onboardingStep > 0 && (
+                    <button onClick={() => setOnboardingStep(s => s - 1)}
+                      className="px-4 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
+                      <ChevronLeft className="w-3 h-3 inline" /> Back
+                    </button>
+                  )}
+                  <button onClick={() => {
+                    if (onboardingStep < TIPS.length - 1) setOnboardingStep(s => s + 1);
+                    else close();
+                  }}
+                    className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
+                    style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                    {onboardingStep < TIPS.length - 1 ? "Next →" : "Got it! 🚀"}
                   </button>
-                )}
-                <button onClick={() => {
-                  if (onboardingStep < 2) setOnboardingStep(s => s + 1);
-                  else { setShowOnboarding(false); localStorage.setItem("gm-onboarding-done", "true"); }
-                }}
-                  className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
-                  style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
-                  {onboardingStep < 2 ? "Next" : "Got it! 🚀"}
-                </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ===== STREAK HERO ===== */}
         <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
