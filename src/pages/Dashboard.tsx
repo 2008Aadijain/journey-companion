@@ -99,6 +99,9 @@ const Dashboard = () => {
   const [buddyCheckedInToday, setBuddyCheckedInToday] = useState<boolean | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { t, lang } = useI18n();
+  const [shieldJustUsed, setShieldJustUsed] = useState(false);
+  const [showShieldTooltip, setShowShieldTooltip] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
