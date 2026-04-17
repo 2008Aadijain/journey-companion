@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { I18nProvider } from "@/hooks/useI18n";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import GoalSetup from "./pages/GoalSetup.tsx";
@@ -28,6 +29,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
+          <I18nProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -43,6 +45,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </I18nProvider>
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
