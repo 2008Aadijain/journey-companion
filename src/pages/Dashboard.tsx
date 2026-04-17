@@ -738,7 +738,7 @@ const Dashboard = () => {
                   <button onClick={() => photoInputRef.current?.click()}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold glass-card text-muted-foreground hover:text-foreground transition-all">
                     <Camera className="w-3.5 h-3.5" />
-                    Add proof 📸 (optional)
+                    {t("add_proof")}
                   </button>
                   {checkinPhoto && <span className="text-[10px] text-primary font-semibold">+5 XP bonus!</span>}
                   <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
@@ -747,17 +747,20 @@ const Dashboard = () => {
                 <button
                   onClick={handleCheckin}
                   disabled={wordCount < 6}
-                  className="mt-3 w-full py-3.5 rounded-full text-sm font-bold text-primary-foreground transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97]"
+                  className={cn(
+                    "mt-3 w-full py-3.5 rounded-full text-sm font-bold text-primary-foreground transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97]",
+                    wordCount >= 6 && "animate-shimmer-btn"
+                  )}
                   style={{
                     background: wordCount >= 6
-                      ? 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 58%))'
+                      ? undefined
                       : 'hsla(258, 30%, 30%, 0.5)',
                     boxShadow: wordCount >= 6
                       ? '0 0 30px hsla(258, 100%, 62%, 0.4), inset 0 1px 0 hsla(0, 0%, 100%, 0.15)'
                       : 'none',
                   }}
                 >
-                  Check In ✅ (+10 XP{checkinPhoto ? " +5 📸" : ""})
+                  {t("check_in")} ✅ (+10 XP{checkinPhoto ? " +5 📸" : ""})
                 </button>
               </>
             )}
@@ -774,7 +777,7 @@ const Dashboard = () => {
           <div className="rounded-2xl p-5 border border-border/40" style={{ background: 'hsla(270, 30%, 12%, 0.5)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">Your GoalMate</span>
+              <span className="text-sm font-bold text-foreground">{t("your_goalmate")}</span>
             </div>
 
             {matchProfile ? (
@@ -805,11 +808,11 @@ const Dashboard = () => {
                 {/* Buddy Status */}
                 <div className="mt-2 flex items-center gap-1.5">
                   {matchProfile.streak >= 7 ? (
-                    <span className="text-[11px] font-semibold text-secondary">🔥 On a streak!</span>
+                    <span className="text-[11px] font-semibold text-secondary">{t("on_streak")}</span>
                   ) : buddyCheckedInToday ? (
-                    <span className="text-[11px] font-semibold" style={{ color: '#00E5A0' }}>🟢 Active today</span>
+                    <span className="text-[11px] font-semibold" style={{ color: '#00E5A0' }}>{t("active_today")}</span>
                   ) : (
-                    <span className="text-[11px] font-semibold text-muted-foreground">😴 Not checked in yet</span>
+                    <span className="text-[11px] font-semibold text-muted-foreground">{t("not_checked_in")}</span>
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1">Motivate each other 💪</p>
@@ -837,7 +840,7 @@ const Dashboard = () => {
                     <div className="flex gap-2">
                       <button onClick={() => { setMateInactive(false); localStorage.setItem("gm-mate-inactive", "false"); }}
                         className="flex-1 py-2 rounded-full text-xs font-semibold glass-card text-muted-foreground">
-                        Keep Waiting
+                        {t("keep_waiting")}
                       </button>
                       <button onClick={async () => {
                         if (!match || !user || !profile) return;
@@ -869,7 +872,7 @@ const Dashboard = () => {
                       }}
                         className="flex-1 py-2 rounded-full text-xs font-bold text-primary-foreground"
                         style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
-                        Find New Mate
+                        {t("find_new_mate")}
                       </button>
                     </div>
                   </div>
@@ -922,7 +925,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-base">📋</span>
-                  <span className="text-sm font-bold text-foreground">Today's Task</span>
+                  <span className="text-sm font-bold text-foreground">{t("todays_task")}</span>
                   {aiActivated && (
                     <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
                       style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
