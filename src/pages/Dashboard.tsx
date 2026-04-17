@@ -14,6 +14,7 @@ import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
 import AiKeyPopup from "@/components/AiKeyPopup";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/hooks/useI18n";
 
 const SMART_NUDGES: Record<string, string[]> = {
   Learning: [
