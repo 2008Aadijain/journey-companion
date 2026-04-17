@@ -149,21 +149,21 @@ const ChatList = () => {
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="px-4 py-3 max-w-lg mx-auto">
-          <h1 className="text-xl font-black text-gradient-hero tracking-tight">Chats</h1>
+          <h1 className="text-xl font-black text-gradient-hero tracking-tight">{t("chat")}</h1>
         </div>
         <div className="flex max-w-lg mx-auto px-4 pb-2 gap-2">
           {([
-            { key: "direct" as Tab, label: "Direct" },
-            { key: "groups" as Tab, label: "Groups" },
-          ]).map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
+            { key: "direct" as Tab, label: t("direct") },
+            { key: "groups" as Tab, label: t("groups") },
+          ]).map(tabItem => (
+            <button key={tabItem.key} onClick={() => setTab(tabItem.key)}
               className={cn(
                 "flex-1 py-2 rounded-full text-xs font-bold transition-all",
-                tab === t.key ? "text-primary-foreground" : "text-muted-foreground glass-card"
+                tab === tabItem.key ? "text-primary-foreground" : "text-muted-foreground glass-card"
               )}
-              style={tab === t.key ? { background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' } : undefined}
+              style={tab === tabItem.key ? { background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' } : undefined}
             >
-              {t.label}
+              {tabItem.label}
             </button>
           ))}
         </div>
@@ -178,37 +178,58 @@ const ChatList = () => {
               <p className="text-muted-foreground text-sm mt-1">Get matched to start chatting!</p>
             </div>
           ) : (
-            conversations.map(c => (
-              <button key={c.matchId}
-                onClick={() => navigate(`/chat/${c.matchId}`)}
-                className="w-full glass-card p-4 flex items-center gap-3 text-left transition-all active:scale-[0.98]"
-              >
-                <div className="relative">
-                  {c.partnerAvatar ? (
-                    <img src={c.partnerAvatar} alt="" className="w-12 h-12 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg"
-                      style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>
-                      {c.partnerEmoji}
-                    </div>
-                  )}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background"
-                    style={{ background: 'hsl(145 80% 50%)' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-foreground">{c.partnerName}</p>
-                    <span className="text-[10px] text-muted-foreground">{timeAgo(c.lastTime)}</span>
+            conversations.map(c => {
+              const status = friendStatus[c.partnerId] || "none";
+              const handleAddFriend = async (e: React.MouseEvent) => {
+                e.stopPropagation();
+                if (!user || status !== "none") return;
+                await supabase.from("friend_requests").insert({ sender_id: user.id, receiver_id: c.partnerId });
+                setFriendStatus(prev => ({ ...prev, [c.partnerId]: "pending" }));
+                toast.success(`${t("friend_request_sent")} — ${c.partnerName}! 🤝`);
+              };
+              return (
+              <div key={c.matchId} className="w-full glass-card p-4 flex items-center gap-3 transition-all">
+                <button onClick={() => navigate(`/chat/${c.matchId}`)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                  <div className="relative">
+                    {c.partnerAvatar ? (
+                      <img src={c.partnerAvatar} alt="" className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg"
+                        style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>
+                        {c.partnerEmoji}
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background"
+                      style={{ background: 'hsl(145 80% 50%)' }} />
                   </div>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{c.lastMessage}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-foreground truncate">{c.partnerName}</p>
+                      <span className="text-[10px] text-muted-foreground flex-shrink-0">{timeAgo(c.lastTime)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{c.lastMessage}</p>
+                  </div>
+                </button>
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  {c.unreadCount > 0 && (
+                    <span className="w-5 h-5 rounded-full bg-secondary text-secondary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {c.unreadCount}
+                    </span>
+                  )}
+                  {status === "accepted" ? (
+                    <span className="text-[10px] font-bold text-primary px-2 py-0.5 rounded-full bg-primary/10">{t("already_friends")}</span>
+                  ) : status === "pending" ? (
+                    <span className="text-[10px] font-semibold text-muted-foreground px-2 py-0.5 rounded-full bg-muted/30">{t("pending")}</span>
+                  ) : (
+                    <button onClick={handleAddFriend}
+                      className="flex items-center gap-1 text-[10px] font-bold text-primary px-2 py-1 rounded-full border border-primary/40 hover:bg-primary/10 transition-all">
+                      <UserPlus className="w-3 h-3" /> {t("add_friend")}
+                    </button>
+                  )}
                 </div>
-                {c.unreadCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-secondary text-secondary-foreground text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                    {c.unreadCount}
-                  </span>
-                )}
-              </button>
-            ))
+              </div>
+              );
+            })
           )
         )}
 
