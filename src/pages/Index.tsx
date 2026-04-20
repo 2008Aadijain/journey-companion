@@ -1,12 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Particles from "@/components/Particles";
 import FeatureCards from "@/components/FeatureCards";
+import SplashScreen from "@/components/SplashScreen";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
+  const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem("gm-splash-shown"));
 
   // Returning users skip landing → go directly to dashboard
   useEffect(() => {
@@ -28,6 +30,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen hero-gradient relative overflow-hidden">
+      {showSplash && (
+        <SplashScreen onDone={() => { setShowSplash(false); sessionStorage.setItem("gm-splash-shown", "1"); }} />
+      )}
       <Particles />
 
       {/* Ambient glow orbs */}
