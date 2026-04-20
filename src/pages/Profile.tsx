@@ -300,6 +300,17 @@ const Profile = () => {
         </div>
       </main>
       <BottomNav />
+      <ShareCard
+        open={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        name={profile.name}
+        goalEmoji={profile.goal_emoji}
+        goalLabel={profile.goal_label}
+        streak={profile.streak}
+        xp={profile.xp ?? 0}
+        level={getLevelTitle(profile.xp ?? 0).title}
+        badges={achievements.length}
+      />
     </div>
   );
 };
