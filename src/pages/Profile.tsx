@@ -4,6 +4,8 @@ import { ArrowLeft, Flame, Trophy, Share2, LogOut, Zap, Camera, Users as UsersIc
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import InsightsPanel from "@/components/InsightsPanel";
+import ShareCard from "@/components/ShareCard";
 
 interface Achievement {
   id: string;
@@ -34,6 +36,7 @@ const Profile = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [friendCount, setFriendCount] = useState(0);
+  const [showShareCard, setShowShareCard] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -212,21 +215,46 @@ const Profile = () => {
             </div>
           </div>
           <button
-            onClick={async () => {
-              const lv = getLevelTitle(profile.xp ?? 0);
-              const text = `🏆 I'm a ${lv.title} ${lv.emoji} on GoalMate!\n🔥 Streak: ${profile.streak} days\n⚡ XP: ${profile.xp ?? 0}\n🏅 Badges: ${achievements.length}\n\nJoin me on GoalMate!`;
-              if (navigator.share) {
-                try { await navigator.share({ title: "My GoalMate Profile", text }); } catch {}
-              } else {
-                await navigator.clipboard.writeText(text);
-              }
-            }}
+            onClick={() => setShowShareCard(true)}
             className="mt-5 w-full py-2.5 rounded-full text-xs font-bold text-primary-foreground inline-flex items-center justify-center gap-2"
             style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}
           >
             <Share2 className="w-3.5 h-3.5" /> Share Profile
           </button>
         </div>
+
+        {/* Smart Insights */}
+        {user && (
+          <InsightsPanel
+            userId={user.id}
+            streak={profile.streak}
+            deadline={profile.deadline}
+            createdAt={profile.created_at}
+          />
+        )}
+
+        {/* Public profile link */}
+        {user && (
+          <button
+            onClick={async () => {
+              const url = `${window.location.origin}/u/${user.id}`;
+              if (navigator.share) {
+                try { await navigator.share({ title: `${profile.name} on GoalMate`, url }); } catch {}
+              } else {
+                await navigator.clipboard.writeText(url);
+              }
+            }}
+            className="w-full glass-card p-3 flex items-center gap-3 text-left hover:bg-primary/5 transition-all">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: 'hsla(258, 80%, 50%, 0.15)' }}>
+              <Share2 className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-foreground">My public profile</p>
+              <p className="text-[10px] text-muted-foreground">Share your goalmate.app/u/... link</p>
+            </div>
+          </button>
+        )}
 
         {/* Badges */}
         <div>
@@ -272,6 +300,17 @@ const Profile = () => {
         </div>
       </main>
       <BottomNav />
+      <ShareCard
+        open={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        name={profile.name}
+        goalEmoji={profile.goal_emoji}
+        goalLabel={profile.goal_label}
+        streak={profile.streak}
+        xp={profile.xp ?? 0}
+        level={getLevelTitle(profile.xp ?? 0).title}
+        badges={achievements.length}
+      />
     </div>
   );
 };
