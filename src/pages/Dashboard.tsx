@@ -119,8 +119,12 @@ const Dashboard = () => {
   useEffect(() => {
     if (!aiActivated || !profile) return;
     let cancelled = false;
+    const created = new Date(profile.created_at);
+    const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const day = Math.max(1, Math.floor((todayDate.getTime() - createdDate.getTime()) / 86400000) + 1);
     const goalLabel = profile.goal_label;
-    const day = calculatedDay;
     setAiTaskLoading(true);
     getAiDailyTask(goalLabel, profile.goal_category, day)
       .then(t => { if (!cancelled) setAiTask(t); })
@@ -132,16 +136,18 @@ const Dashboard = () => {
       .catch(() => {})
       .finally(() => { if (!cancelled) setAiVideosLoading(false); });
     return () => { cancelled = true; };
-  }, [aiActivated, profile, calculatedDay]);
+  }, [aiActivated, profile]);
 
   // In-app reminder banner (evening, not yet checked in)
   useEffect(() => {
     if (!profile || todayCheckedIn) { setShowReminderBanner(false); return; }
-    const dismissedKey = `gm-reminder-dismissed-${todayKeyStr()}`;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const dismissedKey = `gm-reminder-dismissed-${dateStr}`;
     if (localStorage.getItem(dismissedKey) === "true") return;
     const hour = new Date().getHours();
     if (hour >= 18) setShowReminderBanner(true);
   }, [profile, todayCheckedIn]);
+
 
   // Auto-prompt share card on milestone streaks
   useEffect(() => {
