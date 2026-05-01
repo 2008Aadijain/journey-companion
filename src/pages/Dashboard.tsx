@@ -105,8 +105,56 @@ const Dashboard = () => {
   const { t, lang } = useI18n();
   const [shieldJustUsed, setShieldJustUsed] = useState(false);
   const [showShieldTooltip, setShowShieldTooltip] = useState(false);
+  const [aiTask, setAiTask] = useState<string | null>(null);
+  const [aiTaskLoading, setAiTaskLoading] = useState(false);
+  const [aiVideos, setAiVideos] = useState<AiVideo[] | null>(null);
+  const [aiVideosLoading, setAiVideosLoading] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [shareMilestone, setShareMilestone] = useState<string | undefined>(undefined);
+  const [showReminderBanner, setShowReminderBanner] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Fetch AI-generated task & videos when AI active
+  useEffect(() => {
+    if (!aiActivated || !profile) return;
+    let cancelled = false;
+    const goalLabel = profile.goal_label;
+    const day = calculatedDay;
+    setAiTaskLoading(true);
+    getAiDailyTask(goalLabel, profile.goal_category, day)
+      .then(t => { if (!cancelled) setAiTask(t); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setAiTaskLoading(false); });
+    setAiVideosLoading(true);
+    getAiVideos(goalLabel, day)
+      .then(v => { if (!cancelled) setAiVideos(v); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setAiVideosLoading(false); });
+    return () => { cancelled = true; };
+  }, [aiActivated, profile, calculatedDay]);
+
+  // In-app reminder banner (evening, not yet checked in)
+  useEffect(() => {
+    if (!profile || todayCheckedIn) { setShowReminderBanner(false); return; }
+    const dismissedKey = `gm-reminder-dismissed-${todayKeyStr()}`;
+    if (localStorage.getItem(dismissedKey) === "true") return;
+    const hour = new Date().getHours();
+    if (hour >= 18) setShowReminderBanner(true);
+  }, [profile, todayCheckedIn]);
+
+  // Auto-prompt share card on milestone streaks
+  useEffect(() => {
+    if (!profile) return;
+    const milestones: Record<number, string> = { 7: "7 Day Streak! 🔥", 14: "2 Weeks Strong! 💪", 21: "21 Day Habit Locked In! 🧠", 30: "30 Day Champion! 🏆" };
+    const milestone = milestones[profile.streak];
+    if (!milestone) return;
+    const key = `gm-share-shown-${profile.streak}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "true");
+    setShareMilestone(milestone);
+    setTimeout(() => setShowShare(true), 1500);
+  }, [profile]);
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
