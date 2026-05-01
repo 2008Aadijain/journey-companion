@@ -469,6 +469,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      {aiActivated && <AiBackground />}
       <AiKeyPopup
         open={showAiPopup}
         onClose={() => setShowAiPopup(false)}
@@ -476,6 +477,18 @@ const Dashboard = () => {
       />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onLogout={handleLogout} />
       <XpAnimation amount={xpGainAmount} show={showXpAnimation} onDone={() => setShowXpAnimation(false)} />
+      <ShareCard
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        name={profile.name}
+        goalEmoji={profile.goal_emoji}
+        goalLabel={profile.goal_label}
+        streak={profile.streak}
+        xp={profile.xp ?? 0}
+        level={profile.streak >= 60 ? "Master" : profile.streak >= 30 ? "Advanced" : profile.streak >= 14 ? "Intermediate" : "Beginner"}
+        badges={Math.floor((profile.streak ?? 0) / 7)}
+        milestone={shareMilestone}
+      />
 
       {/* Level Up Celebration */}
       {showLevelUp && (
