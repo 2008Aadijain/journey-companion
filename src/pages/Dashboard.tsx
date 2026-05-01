@@ -1074,10 +1074,23 @@ const Dashboard = () => {
                   {taskComplete && <Check className="w-3.5 h-3.5" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className={cn("text-sm font-semibold transition-all", taskComplete ? "text-muted-foreground line-through" : "text-foreground")}>
-                    {todayTask.task}
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-1.5 leading-relaxed">{todayTask.detail}</p>
+                  {aiActivated && aiTaskLoading ? (
+                    <>
+                      <div className="h-4 rounded bg-muted/40 animate-pulse w-5/6" />
+                      <div className="h-3 rounded bg-muted/30 animate-pulse w-2/3 mt-2" />
+                    </>
+                  ) : aiActivated && aiTask ? (
+                    <p className={cn("text-sm font-semibold transition-all", taskComplete ? "text-muted-foreground line-through" : "text-foreground")}>
+                      {aiTask}
+                    </p>
+                  ) : (
+                    <>
+                      <p className={cn("text-sm font-semibold transition-all", taskComplete ? "text-muted-foreground line-through" : "text-foreground")}>
+                        {todayTask.task}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-1.5 leading-relaxed">{todayTask.detail}</p>
+                    </>
+                  )}
                 </div>
               </div>
               {taskComplete && (
