@@ -560,6 +560,25 @@ const Dashboard = () => {
 
       <main className="relative z-10 px-5 pt-6 pb-6 max-w-lg mx-auto space-y-5">
 
+        {/* ===== IN-APP REMINDER BANNER ===== */}
+        {showReminderBanner && !todayCheckedIn && (
+          <div className="rounded-2xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-500"
+            style={{ background: 'linear-gradient(135deg, hsla(25, 80%, 50%, 0.18), hsla(258, 80%, 50%, 0.12))', border: '1px solid hsla(25, 80%, 55%, 0.35)' }}>
+            <div className="text-2xl animate-flame-flicker">🔥</div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">Don't break your streak!</p>
+              <p className="text-[11px] text-muted-foreground">Check in before midnight to keep your {profile.streak}-day streak alive.</p>
+            </div>
+            <button onClick={() => {
+              const dateStr = new Date().toISOString().slice(0, 10);
+              localStorage.setItem(`gm-reminder-dismissed-${dateStr}`, "true");
+              setShowReminderBanner(false);
+            }} className="p-1.5 rounded-full hover:bg-muted/40">
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
         {/* ===== AI ACTIVATE BUTTON (no key) ===== */}
         {!aiActivated && (
           <div className={fadeClass(0)} style={{ transitionDelay: '0ms' }}>
