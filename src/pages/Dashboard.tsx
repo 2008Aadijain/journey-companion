@@ -767,24 +767,55 @@ const Dashboard = () => {
               )}
             </div>
             <div className="space-y-3">
-              {getVideosForCategory(profile.goal_category).map((video, i) => (
-                <a key={i} href={video.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
-                  style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
-                  <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted/30 flex items-center justify-center relative">
-                    <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              {aiActivated && aiVideosLoading && (
+                <>
+                  {[0,1,2].map(i => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl" style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
+                      <div className="w-20 h-14 rounded-lg bg-muted/40 animate-pulse" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 rounded bg-muted/40 animate-pulse w-3/4" />
+                        <div className="h-2 rounded bg-muted/30 animate-pulse w-1/3" />
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+              {aiActivated && !aiVideosLoading && aiVideos && aiVideos.length > 0 ? (
+                aiVideos.map((v, i) => (
+                  <a key={i} href={youtubeSearchUrl(v.searchQuery)} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
+                    style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
+                    <div className="w-20 h-14 rounded-lg flex-shrink-0 flex items-center justify-center relative"
+                      style={{ background: 'linear-gradient(135deg, hsla(258, 80%, 50%, 0.3), hsla(280, 80%, 50%, 0.2))' }}>
                       <Play className="w-5 h-5 text-white fill-white" />
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground line-clamp-2">{video.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">YouTube</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                </a>
-              ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground line-clamp-2">{v.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">YouTube • AI search</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </a>
+                ))
+              ) : (!aiActivated || (!aiVideosLoading && (!aiVideos || aiVideos.length === 0))) && (
+                getVideosForCategory(profile.goal_category).map((video, i) => (
+                  <a key={i} href={video.url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
+                    style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
+                    <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted/30 flex items-center justify-center relative">
+                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="w-5 h-5 text-white fill-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground line-clamp-2">{video.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">YouTube</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </a>
+                ))
+              )}
             </div>
           </div>
         </div>
