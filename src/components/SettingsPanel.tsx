@@ -437,7 +437,7 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
             <Info className="w-5 h-5 text-muted-foreground" />
             <div className="flex-1">
               <span className="text-sm font-medium text-foreground block">About GoalCircle</span>
-              <span className="text-xs text-muted-foreground">Ek goal, ek dost, ek naya safar</span>
+              <span className="text-xs text-muted-foreground">Goals are better together</span>
             </div>
           </button>
 

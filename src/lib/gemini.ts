@@ -1,5 +1,5 @@
 // Client-side Gemini helper. User's own API key (stored in localStorage).
-// This is intentional per product spec — key never leaves the user's device.
+// Key never leaves the user's device.
 
 const MODEL = "gemini-2.0-flash";
 
@@ -53,12 +53,13 @@ export interface AiVideo {
 }
 
 interface CachedTask { day: number; date: string; task: string; }
-interface CachedVideos { day: number; date: string; videos: AiVideo[]; }
+interface CachedVideos { day: number; date: string; videos: AiVideo[]; taskKey: string; }
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
 export async function getAiDailyTask(goalLabel: string, category: string, day: number): Promise<string> {
-  const cacheKey = `gm-ai-task-${goalLabel}-${day}`;
+  // Cache PER-DAY so refresh doesn't regenerate, but midnight rollover gives new task.
+  const cacheKey = `gm-ai-task-${goalLabel}-${day}-${todayKey()}`;
   const cached = localStorage.getItem(cacheKey);
   if (cached) {
     try {
@@ -79,20 +80,25 @@ Give ONE specific actionable task for today. Maximum 2 sentences. Be practical a
   return clean;
 }
 
-export async function getAiVideos(goalLabel: string, day: number): Promise<AiVideo[]> {
-  const cacheKey = `gm-ai-videos-${goalLabel}-${day}`;
+/**
+ * Generate 3 YouTube search queries SPECIFIC to today's task.
+ * Videos change daily because the underlying task changes daily.
+ */
+export async function getAiVideos(goalLabel: string, day: number, taskText: string): Promise<AiVideo[]> {
+  const taskKey = (taskText || "").slice(0, 80);
+  const cacheKey = `gm-ai-videos-${goalLabel}-${day}-${todayKey()}`;
   const cached = localStorage.getItem(cacheKey);
   if (cached) {
     try {
       const parsed: CachedVideos = JSON.parse(cached);
-      if (parsed.date === todayKey() && parsed.day === day) return parsed.videos;
+      if (parsed.date === todayKey() && parsed.day === day && parsed.taskKey === taskKey) return parsed.videos;
     } catch { /* ignore */ }
   }
 
-  const prompt = `User goal: "${goalLabel}"
-Day: ${day}
-Suggest 3 specific YouTube search queries for today's learning related to this goal.
-Return ONLY a JSON array (no markdown, no code fences) of objects with keys "title" (short label, max 60 chars) and "searchQuery" (the search text to use on YouTube). Example: [{"title":"Intro to X","searchQuery":"intro to X tutorial"}]`;
+  const prompt = `Today's task is "${taskText}" for goal "${goalLabel}".
+Give me 3 specific YouTube search queries that would help with this task TODAY.
+Return ONLY a JSON array (no markdown, no code fences) of objects with keys "title" (short label, max 60 chars) and "searchQuery" (the search text to use on YouTube).
+Example: [{"title":"Figma plugins tutorial","searchQuery":"best figma plugins for designers 2024"}]`;
 
   const text = await callGemini({ prompt, json: true });
   let videos: AiVideo[] = [];
@@ -109,7 +115,7 @@ Return ONLY a JSON array (no markdown, no code fences) of objects with keys "tit
     return [];
   }
 
-  localStorage.setItem(cacheKey, JSON.stringify({ day, date: todayKey(), videos } as CachedVideos));
+  localStorage.setItem(cacheKey, JSON.stringify({ day, date: todayKey(), videos, taskKey } as CachedVideos));
   return videos;
 }
 
