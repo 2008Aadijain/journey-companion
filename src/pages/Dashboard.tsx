@@ -763,10 +763,21 @@ const Dashboard = () => {
             <div className="flex items-center gap-2 mb-4">
               <Play className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold text-foreground">{t("learning_resources")}</span>
-              {aiActivated && (
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
-                  style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
-                  ✨ AI Picked
+              {aiActivated ? (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold animate-shimmer-label"
+                  style={{
+                    background: 'linear-gradient(90deg, hsla(258, 80%, 50%, 0.25), hsla(180, 80%, 50%, 0.25), hsla(258, 80%, 50%, 0.25))',
+                    backgroundSize: '200% 100%',
+                    color: 'hsl(258 100% 80%)',
+                    border: '1px solid hsla(258, 100%, 70%, 0.3)',
+                    animation: 'ai-border-flow 3s linear infinite',
+                  }}>
+                  ✨ AI Picked for Today
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+                  style={{ background: 'hsla(258, 30%, 30%, 0.25)', color: 'hsl(258 30% 75%)' }}>
+                  📚 Curated for You
                 </span>
               )}
             </div>
@@ -1061,8 +1072,9 @@ const Dashboard = () => {
                   <span className="text-base">📋</span>
                   <span className="text-sm font-bold text-foreground">{t("todays_task")}</span>
                   {aiActivated && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
-                      style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                      style={{ background: 'hsla(145, 80%, 40%, 0.18)', color: '#00E5A0', border: '1px solid hsla(145, 80%, 45%, 0.3)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#00E5A0', boxShadow: '0 0 8px #00E5A0', animation: 'ai-pulse-dot 1.4s ease-in-out infinite' }} />
                       🤖 AI Generated
                     </span>
                   )}
