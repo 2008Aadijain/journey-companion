@@ -711,10 +711,10 @@ const Dashboard = () => {
 
         {/* ===== MY GOAL CARD ===== */}
         <div className={fadeClass(1)} style={{ transitionDelay: '100ms' }}>
-          <div className="rounded-2xl p-6 relative overflow-hidden"
+          <div className={cn("rounded-2xl p-6 relative overflow-hidden", aiActivated && "ai-gradient-border")}
             style={{
               background: 'linear-gradient(145deg, hsla(258, 100%, 50%, 0.35) 0%, hsla(280, 80%, 35%, 0.25) 50%, hsla(258, 60%, 18%, 0.5) 100%)',
-              border: '1px solid hsla(258, 100%, 70%, 0.2)',
+              border: aiActivated ? 'none' : '1px solid hsla(258, 100%, 70%, 0.2)',
               boxShadow: '0 0 60px -15px hsla(258, 100%, 62%, 0.3), inset 0 1px 0 hsla(0, 0%, 100%, 0.06)',
             }}
           >

@@ -345,6 +345,7 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
               {([
                 { v: "en" as const, label: "EN" },
                 { v: "hi" as const, label: "हिं" },
+                { v: "hg" as const, label: "Hg" },
               ]).map(opt => (
                 <button key={opt.v}
                   onClick={() => { setLang(opt.v); savePrefs({ language: opt.v }); }}
