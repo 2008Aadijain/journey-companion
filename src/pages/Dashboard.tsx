@@ -115,7 +115,7 @@ const Dashboard = () => {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Fetch AI-generated task & videos when AI active
+  // Fetch AI-generated task FIRST, then videos based on that task
   useEffect(() => {
     if (!aiActivated || !profile) return;
     let cancelled = false;
@@ -126,15 +126,19 @@ const Dashboard = () => {
     const day = Math.max(1, Math.floor((todayDate.getTime() - createdDate.getTime()) / 86400000) + 1);
     const goalLabel = profile.goal_label;
     setAiTaskLoading(true);
-    getAiDailyTask(goalLabel, profile.goal_category, day)
-      .then(t => { if (!cancelled) setAiTask(t); })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setAiTaskLoading(false); });
     setAiVideosLoading(true);
-    getAiVideos(goalLabel, day)
-      .then(v => { if (!cancelled) setAiVideos(v); })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setAiVideosLoading(false); });
+    getAiDailyTask(goalLabel, profile.goal_category, day)
+      .then(taskText => {
+        if (cancelled) return;
+        setAiTask(taskText);
+        // Now generate videos specifically for THIS task
+        getAiVideos(goalLabel, day, taskText)
+          .then(v => { if (!cancelled) setAiVideos(v); })
+          .catch(() => {})
+          .finally(() => { if (!cancelled) setAiVideosLoading(false); });
+      })
+      .catch(() => { if (!cancelled) setAiVideosLoading(false); })
+      .finally(() => { if (!cancelled) setAiTaskLoading(false); });
     return () => { cancelled = true; };
   }, [aiActivated, profile]);
 
