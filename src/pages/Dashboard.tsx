@@ -1030,7 +1030,7 @@ const Dashboard = () => {
                     <Users className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-foreground font-bold text-sm">Finding your GoalCircle...</p>
+                    <p className="text-foreground font-bold text-sm">{t("finding_mate")}</p>
                     <p className="text-muted-foreground text-xs mt-0.5">Matching you with someone on the same mission</p>
                   </div>
                 </div>
