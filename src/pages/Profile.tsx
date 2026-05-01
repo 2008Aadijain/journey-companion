@@ -19,7 +19,7 @@ const ALL_BADGES = [
   { name: "Getting Started", emoji: "🌱", description: "3 day streak", threshold: 3 },
   { name: "On Fire", emoji: "🔥", description: "7 day streak", threshold: 7 },
   { name: "Habit Builder", emoji: "🏗️", description: "21 day streak", threshold: 21 },
-  { name: "GoalMate Champion", emoji: "🏆", description: "30 day streak", threshold: 30 },
+  { name: "GoalCircle Champion", emoji: "🏆", description: "30 day streak", threshold: 30 },
 ];
 
 const getLevelTitle = (xp: number): { title: string; emoji: string } => {
@@ -84,9 +84,9 @@ const Profile = () => {
   }, [user, profile, achievements]);
 
   const handleShare = async (badge: Achievement) => {
-    const text = `I just earned the "${badge.badge_emoji} ${badge.badge_name}" badge on GoalMate! ${badge.badge_description}. Join me at GoalMate!`;
+    const text = `I just earned the "${badge.badge_emoji} ${badge.badge_name}" badge on GoalCircle! ${badge.badge_description}. Join me at GoalCircle!`;
     if (navigator.share) {
-      try { await navigator.share({ title: "GoalMate Achievement", text }); } catch {}
+      try { await navigator.share({ title: "GoalCircle Achievement", text }); } catch {}
     } else {
       await navigator.clipboard.writeText(text);
     }
@@ -239,7 +239,7 @@ const Profile = () => {
             onClick={async () => {
               const url = `${window.location.origin}/u/${user.id}`;
               if (navigator.share) {
-                try { await navigator.share({ title: `${profile.name} on GoalMate`, url }); } catch {}
+                try { await navigator.share({ title: `${profile.name} on GoalCircle`, url }); } catch {}
               } else {
                 await navigator.clipboard.writeText(url);
               }

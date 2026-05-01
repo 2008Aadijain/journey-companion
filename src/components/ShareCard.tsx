@@ -19,7 +19,7 @@ const ShareCard = ({ open, onClose, name, goalEmoji, goalLabel, streak, xp, leve
   const cardRef = useRef<HTMLDivElement>(null);
   if (!open) return null;
 
-  const text = `${milestone ? `🎉 ${milestone}\n\n` : ""}I'm crushing it on GoalMate! 🎯\n\n${goalEmoji} Goal: ${goalLabel}\n🔥 Streak: ${streak} days\n⚡ XP: ${xp}\n🏆 Level: ${level}\n🏅 Badges: ${badges}\n\nJoin me on GoalMate!`;
+  const text = `${milestone ? `🎉 ${milestone}\n\n` : ""}I'm crushing it on GoalCircle! 🎯\n\n${goalEmoji} Goal: ${goalLabel}\n🔥 Streak: ${streak} days\n⚡ XP: ${xp}\n🏆 Level: ${level}\n🏅 Badges: ${badges}\n\nJoin me on GoalCircle!`;
 
   const shareWhatsApp = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
@@ -34,7 +34,7 @@ const ShareCard = ({ open, onClose, name, goalEmoji, goalLabel, streak, xp, leve
   };
   const nativeShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: "GoalMate", text }); } catch { /* user cancelled */ }
+      try { await navigator.share({ title: "GoalCircle", text }); } catch { /* user cancelled */ }
     } else copyLink();
   };
 
@@ -61,7 +61,7 @@ const ShareCard = ({ open, onClose, name, goalEmoji, goalLabel, streak, xp, leve
 
           <div className="relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-black tracking-tight" style={{ color: 'white' }}>GoalMate 🎯</span>
+              <span className="text-2xl font-black tracking-tight" style={{ color: 'white' }}>GoalCircle 🎯</span>
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-60" style={{ color: 'white' }}>Achievement</span>
             </div>
 
@@ -100,7 +100,7 @@ const ShareCard = ({ open, onClose, name, goalEmoji, goalLabel, streak, xp, leve
             </div>
 
             <p className="text-center text-xs mt-5 opacity-80 font-semibold" style={{ color: 'white' }}>
-              Join me on GoalMate! 🚀
+              Join me on GoalCircle! 🚀
             </p>
           </div>
         </div>

@@ -52,11 +52,11 @@ const Index = () => {
         </div>
 
         <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-gradient-hero fade-up fade-up-delay-1 leading-[0.9]">
-          GoalMate
+          GoalCircle
         </h1>
 
         <p className="mt-5 text-xl md:text-2xl font-semibold text-gradient-accent fade-up fade-up-delay-2">
-          Ek goal, ek dost, ek naya safar
+          Goals are better together
         </p>
 
         <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-md fade-up fade-up-delay-2">

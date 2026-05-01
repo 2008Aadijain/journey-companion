@@ -79,7 +79,7 @@ const ChatList = () => {
         convos.push({
           matchId: match.id,
           partnerId,
-          partnerName: partner?.name || "GoalMate",
+          partnerName: partner?.name || "GoalCircle",
           partnerEmoji: partner?.goal_emoji || "🎯",
           partnerAvatar: partner?.avatar_url || null,
           lastMessage: lastMsg?.content || "No messages yet",

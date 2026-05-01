@@ -20,5 +20,5 @@ export const MOTIVATION_QUOTES: Quote[] = [
   { en: "You don't have to be great to start, but you have to start to be great.", hi: "छोटी जीत भी जीत होती है।", emoji: "✨" },
   { en: "Focus on progress, not perfection.", hi: "खुद पर विश्वास रखो।", emoji: "🎯" },
   { en: "Dream it. Plan it. Do it.", hi: "आगे बढ़ते रहो, रास्ता खुद बनता है।", emoji: "🎬" },
-  { en: "GoalMate today. Champion tomorrow.", hi: "आज का GoalMate कल का champion है।", emoji: "🏅" },
+  { en: "GoalCircle today. Champion tomorrow.", hi: "आज का GoalCircle कल का champion है।", emoji: "🏅" },
 ];

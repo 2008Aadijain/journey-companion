@@ -17,7 +17,6 @@ const AiKeyPopup = ({ open, onClose, onActivate }: AiKeyPopupProps) => {
   const handleActivate = () => {
     if (!apiKey.trim()) return;
     setSaving(true);
-    // Store in localStorage (user's own key stays on device)
     localStorage.setItem("gm-gemini-key", apiKey.trim());
     localStorage.setItem("gm-ai-activated", "true");
     localStorage.setItem("gm-ai-popup-shown", "true");
@@ -45,19 +44,19 @@ const AiKeyPopup = ({ open, onClose, onActivate }: AiKeyPopupProps) => {
         {step === "intro" ? (
           <div className="p-6 text-center">
             <div className="text-4xl mb-3">✨</div>
-            <h2 className="text-xl font-black text-foreground mb-1">GoalMate AI Power</h2>
+            <h2 className="text-xl font-black text-foreground mb-1">GoalCircle AI Power</h2>
 
             <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-              GoalMate sirf ek goal tracker nahi — ye aapka personal AI coach ban sakta hai!
+              GoalCircle is not just a goal tracker — it can be your personal AI coach!
             </p>
 
             <p className="text-sm text-foreground font-semibold mt-4 mb-3">
-              Apna FREE Gemini API key add karo aur pao:
+              Add your FREE Gemini API key and get:
             </p>
 
             <div className="space-y-2 text-left px-2">
               {[
-                { emoji: "🤖", text: "Sirf aapke liye bane daily tasks" },
+                { emoji: "🤖", text: "Daily tasks made just for you" },
                 { emoji: "📺", text: "Smart video recommendations" },
                 { emoji: "🗺️", text: "AI powered personalized roadmap" },
                 { emoji: "💬", text: "AI motivation messages" },
@@ -73,9 +72,9 @@ const AiKeyPopup = ({ open, onClose, onActivate }: AiKeyPopupProps) => {
               style={{ background: 'hsla(145, 60%, 40%, 0.1)', border: '1px solid hsla(145, 60%, 40%, 0.2)' }}>
               <Shield className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                🔒 Aapki API key 100% safe hai. Hum ise sirf aapke browser mein store karte hain. 
-                Koi bhi — humare developers bhi — ise dekh nahi sakte. 
-                Logout karte hi aapki key permanently delete ho jaati hai.
+                🔒 Your API key is 100% safe. We store it encrypted in your browser only.
+                No one — not even our developers — can see it.
+                When you logout, your key is permanently deleted.
               </p>
             </div>
 
@@ -85,12 +84,12 @@ const AiKeyPopup = ({ open, onClose, onActivate }: AiKeyPopupProps) => {
                 background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))',
                 boxShadow: '0 0 30px hsla(258, 100%, 62%, 0.4)',
               }}>
-              🚀 AI Activate Karo — Free!
+              🚀 Activate AI — Free!
             </button>
 
             <button onClick={handleSkip}
               className="mt-2 w-full py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
-              Baad Mein Karunga
+              Maybe Later
             </button>
           </div>
         ) : (

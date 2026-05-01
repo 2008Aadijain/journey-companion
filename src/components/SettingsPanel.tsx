@@ -147,7 +147,7 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
     if ("Notification" in window) {
       const perm = await Notification.requestPermission();
       if (perm === "granted") {
-        new Notification("GoalMate 🔥", { body: "Notifications enabled! We'll remind you to check in." });
+        new Notification("GoalCircle 🔥", { body: "Notifications enabled! We'll remind you to check in." });
         savePrefs({ notifications_enabled: true });
       }
     }
@@ -345,6 +345,7 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
               {([
                 { v: "en" as const, label: "EN" },
                 { v: "hi" as const, label: "हिं" },
+                { v: "hg" as const, label: "Hg" },
               ]).map(opt => (
                 <button key={opt.v}
                   onClick={() => { setLang(opt.v); savePrefs({ language: opt.v }); }}
@@ -436,8 +437,8 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
           <button className="w-full flex items-center gap-3 py-3 text-left">
             <Info className="w-5 h-5 text-muted-foreground" />
             <div className="flex-1">
-              <span className="text-sm font-medium text-foreground block">About GoalMate</span>
-              <span className="text-xs text-muted-foreground">Ek goal, ek dost, ek naya safar</span>
+              <span className="text-sm font-medium text-foreground block">About GoalCircle</span>
+              <span className="text-xs text-muted-foreground">Goals are better together</span>
             </div>
           </button>
 
@@ -477,7 +478,7 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
             </div>
           )}
 
-          <p className="text-center text-[10px] text-muted-foreground/50 pt-4 pb-6">GoalMate v1.0.0</p>
+          <p className="text-center text-[10px] text-muted-foreground/50 pt-4 pb-6">GoalCircle v1.0.0</p>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 const features = [
   { emoji: "🎯", title: "Set Your Goal", desc: "Define what matters most to you and commit to it.", color: "hsla(258, 100%, 62%, 0.15)" },
-  { emoji: "🤝", title: "Find Your GoalMate", desc: "Get matched with someone chasing the same dream.", color: "hsla(0, 100%, 71%, 0.12)" },
+  { emoji: "🤝", title: "Find Your GoalCircle", desc: "Get matched with someone chasing the same dream.", color: "hsla(0, 100%, 71%, 0.12)" },
   { emoji: "🔥", title: "Build Your Streak", desc: "Stay consistent together and never break the chain.", color: "hsla(40, 100%, 60%, 0.12)" },
 ];
 

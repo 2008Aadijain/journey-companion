@@ -38,7 +38,7 @@ const SplashScreen = ({ onDone, duration = 1800 }: SplashScreenProps) => {
       })}
       <div className="relative text-center animate-in zoom-in-50 duration-700">
         <div className="text-7xl mb-3 animate-bounce">🎯</div>
-        <h1 className="text-4xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
+        <h1 className="text-4xl font-black text-gradient-hero tracking-tight">GoalCircle</h1>
         <p className="text-xs text-muted-foreground mt-2 font-semibold tracking-widest uppercase">One goal, one mate</p>
       </div>
       <style>{`

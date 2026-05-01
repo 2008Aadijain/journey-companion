@@ -165,9 +165,9 @@ const DirectChat = () => {
             )}
           </button>
           <div>
-            <p className="text-foreground font-semibold text-sm">{partnerName || "GoalMate"}</p>
+            <p className="text-foreground font-semibold text-sm">{partnerName || "GoalCircle"}</p>
             <p className="text-xs" style={{ color: partnerTyping ? 'hsl(258 100% 70%)' : partnerOnline ? 'hsl(145 80% 55%)' : 'hsl(var(--muted-foreground))' }}>
-              {partnerTyping ? "typing…" : partnerOnline ? "Online" : "Your GoalMate"}
+              {partnerTyping ? "typing…" : partnerOnline ? "Online" : "Your GoalCircle"}
             </p>
           </div>
         </div>
@@ -183,7 +183,7 @@ const DirectChat = () => {
         {messages.length === 0 && (
           <div className="text-center py-12">
             <div className="text-4xl mb-3">👋</div>
-            <p className="text-muted-foreground text-sm">Say hi to your GoalMate!</p>
+            <p className="text-muted-foreground text-sm">Say hi to your GoalCircle!</p>
           </div>
         )}
         {messages.map((msg) => {

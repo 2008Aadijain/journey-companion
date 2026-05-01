@@ -115,7 +115,7 @@ const Dashboard = () => {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Fetch AI-generated task & videos when AI active
+  // Fetch AI-generated task FIRST, then videos based on that task
   useEffect(() => {
     if (!aiActivated || !profile) return;
     let cancelled = false;
@@ -126,15 +126,19 @@ const Dashboard = () => {
     const day = Math.max(1, Math.floor((todayDate.getTime() - createdDate.getTime()) / 86400000) + 1);
     const goalLabel = profile.goal_label;
     setAiTaskLoading(true);
-    getAiDailyTask(goalLabel, profile.goal_category, day)
-      .then(t => { if (!cancelled) setAiTask(t); })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setAiTaskLoading(false); });
     setAiVideosLoading(true);
-    getAiVideos(goalLabel, day)
-      .then(v => { if (!cancelled) setAiVideos(v); })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setAiVideosLoading(false); });
+    getAiDailyTask(goalLabel, profile.goal_category, day)
+      .then(taskText => {
+        if (cancelled) return;
+        setAiTask(taskText);
+        // Now generate videos specifically for THIS task
+        getAiVideos(goalLabel, day, taskText)
+          .then(v => { if (!cancelled) setAiVideos(v); })
+          .catch(() => {})
+          .finally(() => { if (!cancelled) setAiVideosLoading(false); });
+      })
+      .catch(() => { if (!cancelled) setAiVideosLoading(false); })
+      .finally(() => { if (!cancelled) setAiTaskLoading(false); });
     return () => { cancelled = true; };
   }, [aiActivated, profile]);
 
@@ -187,7 +191,7 @@ const Dashboard = () => {
     const checkReminder = () => {
       const now = new Date();
       if (now.getHours() >= 20 && "Notification" in window && Notification.permission === "granted") {
-        new Notification("GoalMate 🔥", {
+        new Notification("GoalCircle 🔥", {
           body: "Hey! Don't break your streak today 🔥 Check in now!",
           icon: "/placeholder.svg",
         });
@@ -289,7 +293,7 @@ const Dashboard = () => {
     findMatch();
   }, [user, profile]);
 
-  // Check if GoalMate is inactive (3+ days)
+  // Check if GoalCircle is inactive (3+ days)
   useEffect(() => {
     if (!matchProfile) return;
     const checkInactive = async () => {
@@ -522,7 +526,7 @@ const Dashboard = () => {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-5 py-3.5 max-w-lg mx-auto">
           <div className="flex items-center gap-1.5">
-            <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
+            <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalCircle</h1>
             {aiActivated && (
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
                 style={{ background: 'hsla(160, 80%, 45%, 0.15)', color: '#00E5A0', border: '1px solid hsla(160, 80%, 45%, 0.3)' }}>
@@ -598,9 +602,9 @@ const Dashboard = () => {
         {/* ===== ONBOARDING TIPS ===== */}
         {showOnboarding && (() => {
           const TIPS = [
-            { title: "Welcome to GoalMate! 👋", body: "The app that helps you achieve goals with a partner." },
+            { title: "Welcome to GoalCircle! 👋", body: "The app that helps you achieve goals with a partner." },
             { title: "Build your streak 🔥", body: "Check in daily — miss a day and your streak resets!" },
-            { title: "Stay accountable 🤝", body: "Your GoalMate is here to motivate you. Chat anytime!" },
+            { title: "Stay accountable 🤝", body: "Your GoalCircle is here to motivate you. Chat anytime!" },
             { title: "Earn XP & badges 🏆", body: "Climb the leaderboard and show your progress to the world." },
             { title: "Activate AI Power ✨", body: "Add your free Gemini key for personalized tasks and videos." },
           ];
@@ -707,10 +711,10 @@ const Dashboard = () => {
 
         {/* ===== MY GOAL CARD ===== */}
         <div className={fadeClass(1)} style={{ transitionDelay: '100ms' }}>
-          <div className="rounded-2xl p-6 relative overflow-hidden"
+          <div className={cn("rounded-2xl p-6 relative overflow-hidden", aiActivated && "ai-gradient-border")}
             style={{
               background: 'linear-gradient(145deg, hsla(258, 100%, 50%, 0.35) 0%, hsla(280, 80%, 35%, 0.25) 50%, hsla(258, 60%, 18%, 0.5) 100%)',
-              border: '1px solid hsla(258, 100%, 70%, 0.2)',
+              border: aiActivated ? 'none' : '1px solid hsla(258, 100%, 70%, 0.2)',
               boxShadow: '0 0 60px -15px hsla(258, 100%, 62%, 0.3), inset 0 1px 0 hsla(0, 0%, 100%, 0.06)',
             }}
           >
@@ -759,10 +763,21 @@ const Dashboard = () => {
             <div className="flex items-center gap-2 mb-4">
               <Play className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold text-foreground">{t("learning_resources")}</span>
-              {aiActivated && (
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
-                  style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
-                  ✨ AI Picked
+              {aiActivated ? (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold animate-shimmer-label"
+                  style={{
+                    background: 'linear-gradient(90deg, hsla(258, 80%, 50%, 0.25), hsla(180, 80%, 50%, 0.25), hsla(258, 80%, 50%, 0.25))',
+                    backgroundSize: '200% 100%',
+                    color: 'hsl(258 100% 80%)',
+                    border: '1px solid hsla(258, 100%, 70%, 0.3)',
+                    animation: 'ai-border-flow 3s linear infinite',
+                  }}>
+                  ✨ AI Picked for Today
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+                  style={{ background: 'hsla(258, 30%, 30%, 0.25)', color: 'hsl(258 30% 75%)' }}>
+                  📚 Curated for You
                 </span>
               )}
             </div>
@@ -965,7 +980,7 @@ const Dashboard = () => {
                   <div className="mt-3 p-3 rounded-xl border border-secondary/30" style={{ background: 'hsla(25, 80%, 50%, 0.08)' }}>
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className="w-4 h-4 text-secondary" />
-                      <p className="text-xs font-bold text-secondary">Your GoalMate seems inactive 😴</p>
+                      <p className="text-xs font-bold text-secondary">Your GoalCircle seems inactive 😴</p>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => { setMateInactive(false); localStorage.setItem("gm-mate-inactive", "false"); }}
@@ -1015,7 +1030,7 @@ const Dashboard = () => {
                     <Users className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-foreground font-bold text-sm">Finding your GoalMate...</p>
+                    <p className="text-foreground font-bold text-sm">{t("finding_mate")}</p>
                     <p className="text-muted-foreground text-xs mt-0.5">Matching you with someone on the same mission</p>
                   </div>
                 </div>
@@ -1057,8 +1072,9 @@ const Dashboard = () => {
                   <span className="text-base">📋</span>
                   <span className="text-sm font-bold text-foreground">{t("todays_task")}</span>
                   {aiActivated && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
-                      style={{ background: 'hsla(258, 80%, 50%, 0.15)', color: 'hsl(258 100% 70%)' }}>
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                      style={{ background: 'hsla(145, 80%, 40%, 0.18)', color: '#00E5A0', border: '1px solid hsla(145, 80%, 45%, 0.3)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#00E5A0', boxShadow: '0 0 8px #00E5A0', animation: 'ai-pulse-dot 1.4s ease-in-out infinite' }} />
                       🤖 AI Generated
                     </span>
                   )}
@@ -1131,7 +1147,7 @@ const Dashboard = () => {
               </div>
               <button onClick={() => {
                 const text = lang === "hi" ? todayQuote.hi : todayQuote.en;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + todayQuote.emoji + "\n\n— GoalMate 🎯")}`, "_blank");
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + todayQuote.emoji + "\n\n— GoalCircle 🎯")}`, "_blank");
               }} className="p-1.5 rounded-full hover:bg-muted/50 transition-colors">
                 <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
