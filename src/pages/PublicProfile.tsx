@@ -44,7 +44,7 @@ const PublicProfile = () => {
   const sharePublic = async () => {
     const url = window.location.href;
     if (navigator.share) {
-      try { await navigator.share({ title: `${profile?.name} on GoalMate`, url }); } catch { /* cancelled */ }
+      try { await navigator.share({ title: `${profile?.name} on GoalCircle`, url }); } catch { /* cancelled */ }
     } else {
       await navigator.clipboard.writeText(url);
       toast.success("Profile link copied! 📋");
@@ -66,11 +66,11 @@ const PublicProfile = () => {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="text-6xl mb-4">🔍</div>
         <h2 className="text-xl font-bold text-foreground mb-2">Profile not found</h2>
-        <p className="text-sm text-muted-foreground mb-6">This user doesn't exist on GoalMate.</p>
+        <p className="text-sm text-muted-foreground mb-6">This user doesn't exist on GoalCircle.</p>
         <button onClick={() => navigate("/")}
           className="px-6 py-2.5 rounded-full text-sm font-bold text-primary-foreground"
           style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
-          Go to GoalMate
+          Go to GoalCircle
         </button>
       </div>
     );

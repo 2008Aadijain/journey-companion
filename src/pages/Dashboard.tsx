@@ -187,7 +187,7 @@ const Dashboard = () => {
     const checkReminder = () => {
       const now = new Date();
       if (now.getHours() >= 20 && "Notification" in window && Notification.permission === "granted") {
-        new Notification("GoalMate 🔥", {
+        new Notification("GoalCircle 🔥", {
           body: "Hey! Don't break your streak today 🔥 Check in now!",
           icon: "/placeholder.svg",
         });
@@ -289,7 +289,7 @@ const Dashboard = () => {
     findMatch();
   }, [user, profile]);
 
-  // Check if GoalMate is inactive (3+ days)
+  // Check if GoalCircle is inactive (3+ days)
   useEffect(() => {
     if (!matchProfile) return;
     const checkInactive = async () => {
@@ -522,7 +522,7 @@ const Dashboard = () => {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-5 py-3.5 max-w-lg mx-auto">
           <div className="flex items-center gap-1.5">
-            <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalMate</h1>
+            <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalCircle</h1>
             {aiActivated && (
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
                 style={{ background: 'hsla(160, 80%, 45%, 0.15)', color: '#00E5A0', border: '1px solid hsla(160, 80%, 45%, 0.3)' }}>
@@ -598,9 +598,9 @@ const Dashboard = () => {
         {/* ===== ONBOARDING TIPS ===== */}
         {showOnboarding && (() => {
           const TIPS = [
-            { title: "Welcome to GoalMate! 👋", body: "The app that helps you achieve goals with a partner." },
+            { title: "Welcome to GoalCircle! 👋", body: "The app that helps you achieve goals with a partner." },
             { title: "Build your streak 🔥", body: "Check in daily — miss a day and your streak resets!" },
-            { title: "Stay accountable 🤝", body: "Your GoalMate is here to motivate you. Chat anytime!" },
+            { title: "Stay accountable 🤝", body: "Your GoalCircle is here to motivate you. Chat anytime!" },
             { title: "Earn XP & badges 🏆", body: "Climb the leaderboard and show your progress to the world." },
             { title: "Activate AI Power ✨", body: "Add your free Gemini key for personalized tasks and videos." },
           ];
@@ -965,7 +965,7 @@ const Dashboard = () => {
                   <div className="mt-3 p-3 rounded-xl border border-secondary/30" style={{ background: 'hsla(25, 80%, 50%, 0.08)' }}>
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className="w-4 h-4 text-secondary" />
-                      <p className="text-xs font-bold text-secondary">Your GoalMate seems inactive 😴</p>
+                      <p className="text-xs font-bold text-secondary">Your GoalCircle seems inactive 😴</p>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => { setMateInactive(false); localStorage.setItem("gm-mate-inactive", "false"); }}
@@ -1015,7 +1015,7 @@ const Dashboard = () => {
                     <Users className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-foreground font-bold text-sm">Finding your GoalMate...</p>
+                    <p className="text-foreground font-bold text-sm">Finding your GoalCircle...</p>
                     <p className="text-muted-foreground text-xs mt-0.5">Matching you with someone on the same mission</p>
                   </div>
                 </div>
@@ -1131,7 +1131,7 @@ const Dashboard = () => {
               </div>
               <button onClick={() => {
                 const text = lang === "hi" ? todayQuote.hi : todayQuote.en;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + todayQuote.emoji + "\n\n— GoalMate 🎯")}`, "_blank");
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + todayQuote.emoji + "\n\n— GoalCircle 🎯")}`, "_blank");
               }} className="p-1.5 rounded-full hover:bg-muted/50 transition-colors">
                 <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
               </button>

@@ -91,7 +91,7 @@ const Login = () => {
 
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8 fade-up">
-          <h1 className="text-5xl font-black text-gradient-hero tracking-tighter leading-[0.9] mb-2">GoalMate</h1>
+          <h1 className="text-5xl font-black text-gradient-hero tracking-tighter leading-[0.9] mb-2">GoalCircle</h1>
           <p className="text-muted-foreground text-sm">Ek goal, ek dost, ek naya safar</p>
         </div>
 

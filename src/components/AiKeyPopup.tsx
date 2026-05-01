@@ -45,10 +45,10 @@ const AiKeyPopup = ({ open, onClose, onActivate }: AiKeyPopupProps) => {
         {step === "intro" ? (
           <div className="p-6 text-center">
             <div className="text-4xl mb-3">✨</div>
-            <h2 className="text-xl font-black text-foreground mb-1">GoalMate AI Power</h2>
+            <h2 className="text-xl font-black text-foreground mb-1">GoalCircle AI Power</h2>
 
             <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-              GoalMate sirf ek goal tracker nahi — ye aapka personal AI coach ban sakta hai!
+              GoalCircle sirf ek goal tracker nahi — ye aapka personal AI coach ban sakta hai!
             </p>
 
             <p className="text-sm text-foreground font-semibold mt-4 mb-3">

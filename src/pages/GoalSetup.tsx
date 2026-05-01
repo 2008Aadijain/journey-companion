@@ -124,7 +124,7 @@ const GoalSetup = () => {
         {step === "custom" && (
           <div className="fade-up text-center">
             <h2 className="text-3xl md:text-4xl font-black text-gradient-hero mb-2 tracking-tight">What's your goal? ✨</h2>
-            <p className="text-muted-foreground mb-8">Be specific — your GoalMate needs to know!</p>
+            <p className="text-muted-foreground mb-8">Be specific — your GoalCircle needs to know!</p>
             <textarea value={customGoal} onChange={(e) => setCustomGoal(e.target.value)}
               placeholder="e.g. Run a 5K in under 30 minutes..."
               className="w-full h-32 glass-card bg-transparent text-foreground placeholder:text-muted-foreground p-4 resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-all" />

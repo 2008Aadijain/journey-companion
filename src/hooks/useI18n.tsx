@@ -18,7 +18,7 @@ const DICT: Record<string, { en: string; hi: string }> = {
 
   // Dashboard
   daily_checkin: { en: "Daily Check-in", hi: "आज का चेक-इन" },
-  your_goalmate: { en: "Your GoalMate", hi: "आपका गोलमेट" },
+  your_goalmate: { en: "Your GoalCircle", hi: "आपका गोलमेट" },
   todays_task: { en: "Today's Task", hi: "आज का काम" },
   progress_wall: { en: "Progress Wall", hi: "प्रगति दीवार" },
   check_in: { en: "Check In", hi: "चेक इन करें" },
