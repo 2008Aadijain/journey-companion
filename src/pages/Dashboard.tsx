@@ -13,8 +13,11 @@ import SettingsPanel from "@/components/SettingsPanel";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
 import AiKeyPopup from "@/components/AiKeyPopup";
+import AiBackground from "@/components/AiBackground";
+import ShareCard from "@/components/ShareCard";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/hooks/useI18n";
+import { getAiDailyTask, getAiVideos, youtubeSearchUrl, type AiVideo } from "@/lib/gemini";
 
 const SMART_NUDGES: Record<string, string[]> = {
   Learning: [
@@ -102,8 +105,62 @@ const Dashboard = () => {
   const { t, lang } = useI18n();
   const [shieldJustUsed, setShieldJustUsed] = useState(false);
   const [showShieldTooltip, setShowShieldTooltip] = useState(false);
+  const [aiTask, setAiTask] = useState<string | null>(null);
+  const [aiTaskLoading, setAiTaskLoading] = useState(false);
+  const [aiVideos, setAiVideos] = useState<AiVideo[] | null>(null);
+  const [aiVideosLoading, setAiVideosLoading] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [shareMilestone, setShareMilestone] = useState<string | undefined>(undefined);
+  const [showReminderBanner, setShowReminderBanner] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Fetch AI-generated task & videos when AI active
+  useEffect(() => {
+    if (!aiActivated || !profile) return;
+    let cancelled = false;
+    const created = new Date(profile.created_at);
+    const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const day = Math.max(1, Math.floor((todayDate.getTime() - createdDate.getTime()) / 86400000) + 1);
+    const goalLabel = profile.goal_label;
+    setAiTaskLoading(true);
+    getAiDailyTask(goalLabel, profile.goal_category, day)
+      .then(t => { if (!cancelled) setAiTask(t); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setAiTaskLoading(false); });
+    setAiVideosLoading(true);
+    getAiVideos(goalLabel, day)
+      .then(v => { if (!cancelled) setAiVideos(v); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setAiVideosLoading(false); });
+    return () => { cancelled = true; };
+  }, [aiActivated, profile]);
+
+  // In-app reminder banner (evening, not yet checked in)
+  useEffect(() => {
+    if (!profile || todayCheckedIn) { setShowReminderBanner(false); return; }
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const dismissedKey = `gm-reminder-dismissed-${dateStr}`;
+    if (localStorage.getItem(dismissedKey) === "true") return;
+    const hour = new Date().getHours();
+    if (hour >= 18) setShowReminderBanner(true);
+  }, [profile, todayCheckedIn]);
+
+
+  // Auto-prompt share card on milestone streaks
+  useEffect(() => {
+    if (!profile) return;
+    const milestones: Record<number, string> = { 7: "7 Day Streak! 🔥", 14: "2 Weeks Strong! 💪", 21: "21 Day Habit Locked In! 🧠", 30: "30 Day Champion! 🏆" };
+    const milestone = milestones[profile.streak];
+    if (!milestone) return;
+    const key = `gm-share-shown-${profile.streak}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "true");
+    setShareMilestone(milestone);
+    setTimeout(() => setShowShare(true), 1500);
+  }, [profile]);
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -412,6 +469,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      {aiActivated && <AiBackground />}
       <AiKeyPopup
         open={showAiPopup}
         onClose={() => setShowAiPopup(false)}
@@ -419,6 +477,18 @@ const Dashboard = () => {
       />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onLogout={handleLogout} />
       <XpAnimation amount={xpGainAmount} show={showXpAnimation} onDone={() => setShowXpAnimation(false)} />
+      <ShareCard
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        name={profile.name}
+        goalEmoji={profile.goal_emoji}
+        goalLabel={profile.goal_label}
+        streak={profile.streak}
+        xp={profile.xp ?? 0}
+        level={profile.streak >= 60 ? "Master" : profile.streak >= 30 ? "Advanced" : profile.streak >= 14 ? "Intermediate" : "Beginner"}
+        badges={Math.floor((profile.streak ?? 0) / 7)}
+        milestone={shareMilestone}
+      />
 
       {/* Level Up Celebration */}
       {showLevelUp && (
@@ -489,6 +559,25 @@ const Dashboard = () => {
       </header>
 
       <main className="relative z-10 px-5 pt-6 pb-6 max-w-lg mx-auto space-y-5">
+
+        {/* ===== IN-APP REMINDER BANNER ===== */}
+        {showReminderBanner && !todayCheckedIn && (
+          <div className="rounded-2xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-500"
+            style={{ background: 'linear-gradient(135deg, hsla(25, 80%, 50%, 0.18), hsla(258, 80%, 50%, 0.12))', border: '1px solid hsla(25, 80%, 55%, 0.35)' }}>
+            <div className="text-2xl animate-flame-flicker">🔥</div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">Don't break your streak!</p>
+              <p className="text-[11px] text-muted-foreground">Check in before midnight to keep your {profile.streak}-day streak alive.</p>
+            </div>
+            <button onClick={() => {
+              const dateStr = new Date().toISOString().slice(0, 10);
+              localStorage.setItem(`gm-reminder-dismissed-${dateStr}`, "true");
+              setShowReminderBanner(false);
+            }} className="p-1.5 rounded-full hover:bg-muted/40">
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
 
         {/* ===== AI ACTIVATE BUTTON (no key) ===== */}
         {!aiActivated && (
@@ -678,24 +767,55 @@ const Dashboard = () => {
               )}
             </div>
             <div className="space-y-3">
-              {getVideosForCategory(profile.goal_category).map((video, i) => (
-                <a key={i} href={video.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
-                  style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
-                  <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted/30 flex items-center justify-center relative">
-                    <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              {aiActivated && aiVideosLoading && (
+                <>
+                  {[0,1,2].map(i => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl" style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
+                      <div className="w-20 h-14 rounded-lg bg-muted/40 animate-pulse" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 rounded bg-muted/40 animate-pulse w-3/4" />
+                        <div className="h-2 rounded bg-muted/30 animate-pulse w-1/3" />
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+              {aiActivated && !aiVideosLoading && aiVideos && aiVideos.length > 0 ? (
+                aiVideos.map((v, i) => (
+                  <a key={i} href={youtubeSearchUrl(v.searchQuery)} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
+                    style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
+                    <div className="w-20 h-14 rounded-lg flex-shrink-0 flex items-center justify-center relative"
+                      style={{ background: 'linear-gradient(135deg, hsla(258, 80%, 50%, 0.3), hsla(280, 80%, 50%, 0.2))' }}>
                       <Play className="w-5 h-5 text-white fill-white" />
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground line-clamp-2">{video.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">YouTube</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                </a>
-              ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground line-clamp-2">{v.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">YouTube • AI search</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </a>
+                ))
+              ) : (!aiActivated || (!aiVideosLoading && (!aiVideos || aiVideos.length === 0))) && (
+                getVideosForCategory(profile.goal_category).map((video, i) => (
+                  <a key={i} href={video.url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
+                    style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
+                    <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted/30 flex items-center justify-center relative">
+                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="w-5 h-5 text-white fill-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground line-clamp-2">{video.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">YouTube</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </a>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -954,10 +1074,23 @@ const Dashboard = () => {
                   {taskComplete && <Check className="w-3.5 h-3.5" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className={cn("text-sm font-semibold transition-all", taskComplete ? "text-muted-foreground line-through" : "text-foreground")}>
-                    {todayTask.task}
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-1.5 leading-relaxed">{todayTask.detail}</p>
+                  {aiActivated && aiTaskLoading ? (
+                    <>
+                      <div className="h-4 rounded bg-muted/40 animate-pulse w-5/6" />
+                      <div className="h-3 rounded bg-muted/30 animate-pulse w-2/3 mt-2" />
+                    </>
+                  ) : aiActivated && aiTask ? (
+                    <p className={cn("text-sm font-semibold transition-all", taskComplete ? "text-muted-foreground line-through" : "text-foreground")}>
+                      {aiTask}
+                    </p>
+                  ) : (
+                    <>
+                      <p className={cn("text-sm font-semibold transition-all", taskComplete ? "text-muted-foreground line-through" : "text-foreground")}>
+                        {todayTask.task}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-1.5 leading-relaxed">{todayTask.detail}</p>
+                    </>
+                  )}
                 </div>
               </div>
               {taskComplete && (
