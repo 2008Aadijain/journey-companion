@@ -33,7 +33,8 @@ const ShapeEl = ({ s }: { s: Shape }) => {
     animation: `ai-float ${s.duration}s ease-in-out ${s.delay}s infinite, ai-spin ${s.duration * 1.5}s linear ${s.delay}s infinite`,
     willChange: "transform, opacity",
     pointerEvents: "none",
-    filter: `drop-shadow(0 0 ${s.size * 0.6}px ${s.glow})`,
+    opacity: 0.08,
+    filter: `drop-shadow(0 0 ${s.size * 0.3}px ${s.glow})`,
   };
 
   if (s.type === "tri") {
