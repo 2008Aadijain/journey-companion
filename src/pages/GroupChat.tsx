@@ -153,30 +153,53 @@ const GroupChat = () => {
               </button>
             </div>
             <div className="px-5 py-3 overflow-y-auto" style={{ maxHeight: 'calc(70vh - 60px)' }}>
-              {members.map(m => (
-                <button key={m.user_id}
-                  onClick={() => { setShowMembers(false); /* could navigate to profile */ }}
-                  className="w-full flex items-center gap-3 py-3 border-b border-border/10 text-left">
-                  {m.avatar_url ? (
-                    <img src={m.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                      style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>
-                      {m.name.charAt(0).toUpperCase()}
+              {members.map(m => {
+                const isMe = m.user_id === user?.id;
+                const status = friendStatus[m.user_id] || "none";
+                return (
+                  <div key={m.user_id}
+                    className="w-full flex items-center gap-3 py-3 border-b border-border/10 text-left">
+                    {m.avatar_url ? (
+                      <img src={m.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                        style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>
+                        {m.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">
+                        {m.name} {isMe && <span className="text-primary text-xs">(You)</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{m.goal_emoji} {m.goal_label}</p>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground">
-                      {m.name} {m.user_id === user?.id && <span className="text-primary text-xs">(You)</span>}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{m.goal_emoji} {m.goal_label}</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-0.5">
+                        <span className="text-xs">🔥</span>
+                        <span className="text-xs font-bold text-secondary">{m.streak}</span>
+                      </div>
+                      {!isMe && status === "none" && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); addFriend(m.user_id); }}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold text-primary-foreground"
+                          style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}
+                        >
+                          <UserPlus className="w-3 h-3" /> Add
+                        </button>
+                      )}
+                      {!isMe && status === "pending" && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-muted-foreground glass-card">Pending</span>
+                      )}
+                      {!isMe && status === "accepted" && (
+                        <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                          style={{ background: 'hsla(145, 70%, 45%, 0.18)', color: 'hsl(145 70% 60%)' }}>
+                          <Check className="w-3 h-3" /> Friends
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs">🔥</span>
-                    <span className="text-xs font-bold text-secondary">{m.streak}</span>
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
