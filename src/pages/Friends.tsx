@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Users, Plus, Check, X, Flame, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Users, Plus, Check, X, Flame, MessageCircle, Sparkles, Clock, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
+import { useToast } from "@/hooks/use-toast";
 
 type Tab = "friends" | "requests" | "groups";
 
@@ -37,10 +38,12 @@ interface FriendGroup {
 const Friends = () => {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("friends");
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [requestProfiles, setRequestProfiles] = useState<Record<string, UserProfile>>({});
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const [groups, setGroups] = useState<FriendGroup[]>([]);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -83,6 +86,23 @@ const Friends = () => {
       setFriends([]);
     }
 
+    // Load profiles for ALL users in pending requests (incoming + outgoing)
+    const pendingReqs = (reqs || []).filter(r => r.status === "pending");
+    const otherIds = Array.from(new Set(pendingReqs.map(r => r.sender_id === user.id ? r.receiver_id : r.sender_id)));
+    if (otherIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, name, goal_label, goal_emoji, streak, avatar_url, goal_category")
+        .in("user_id", otherIds);
+      if (profs) {
+        const map: Record<string, UserProfile> = {};
+        profs.forEach(p => { map[p.user_id] = p; });
+        setRequestProfiles(map);
+      }
+    } else {
+      setRequestProfiles({});
+    }
+
     // Load groups
     const { data: grps } = await supabase.from("friend_groups").select("*");
     if (grps) setGroups(grps);
@@ -107,18 +127,46 @@ const Friends = () => {
   const sendRequest = async (receiverId: string) => {
     if (!user) return;
     await supabase.from("friend_requests").insert({ sender_id: user.id, receiver_id: receiverId });
+    toast({ title: "Friend request sent! 🤝" });
     loadData();
   };
 
   const acceptRequest = async (requestId: string) => {
     await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", requestId);
-    // Award XP for accepting friend
     if (user && profile) {
       await supabase.from("profiles").update({ xp: (profile.xp ?? 0) + 5 }).eq("user_id", user.id);
       setXpGain(5);
       setShowXp(true);
     }
+    toast({ title: "You're now friends! 🎉" });
     loadData();
+  };
+
+  const cancelRequest = async (requestId: string) => {
+    await supabase.from("friend_requests").delete().eq("id", requestId);
+    toast({ title: "Request cancelled" });
+    loadData();
+  };
+
+  const messageFriend = async (friendId: string) => {
+    if (!user || !profile) return;
+    // Find or create a match between the two
+    const { data: existing } = await supabase
+      .from("matches")
+      .select("*")
+      .or(`and(user1_id.eq.${user.id},user2_id.eq.${friendId}),and(user1_id.eq.${friendId},user2_id.eq.${user.id})`)
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      navigate(`/chat/${existing.id}`);
+      return;
+    }
+    const { data: created } = await supabase
+      .from("matches")
+      .insert({ user1_id: user.id, user2_id: friendId, goal_category: profile.goal_category })
+      .select()
+      .single();
+    if (created) navigate(`/chat/${created.id}`);
   };
 
   const cheerFriend = async (friendId: string) => {
@@ -135,6 +183,7 @@ const Friends = () => {
 
   const rejectRequest = async (requestId: string) => {
     await supabase.from("friend_requests").delete().eq("id", requestId);
+    toast({ title: "Request declined" });
     loadData();
   };
 
@@ -168,6 +217,8 @@ const Friends = () => {
   };
 
   const pendingReceived = friendRequests.filter(r => r.receiver_id === user?.id && r.status === "pending");
+  const pendingSent = friendRequests.filter(r => r.sender_id === user?.id && r.status === "pending");
+  const totalPending = pendingReceived.length + pendingSent.length;
 
   const Avatar = ({ u }: { u: UserProfile }) => u.avatar_url
     ? <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
@@ -205,7 +256,7 @@ const Friends = () => {
         <div className="flex max-w-lg mx-auto px-4 pb-2 gap-2">
           {([
             { key: "friends" as Tab, label: "Friends", count: friends.length },
-            { key: "requests" as Tab, label: "Requests", count: pendingReceived.length },
+            { key: "requests" as Tab, label: "Requests", count: totalPending },
             { key: "groups" as Tab, label: "Groups", count: groups.length },
           ]).map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -321,11 +372,19 @@ const Friends = () => {
                     <span className="text-xs text-secondary font-bold">{f.streak}</span>
                   </div>
                 </div>
-                <button onClick={() => cheerFriend(f.user_id)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all glass-card text-muted-foreground hover:text-primary hover:bg-primary/10">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Cheer
-                </button>
+                <div className="flex flex-col gap-1.5">
+                  <button onClick={() => messageFriend(f.user_id)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-primary-foreground"
+                    style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Message
+                  </button>
+                  <button onClick={() => cheerFriend(f.user_id)}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold transition-all glass-card text-muted-foreground hover:text-primary hover:bg-primary/10">
+                    <Sparkles className="w-3 h-3" />
+                    Cheer
+                  </button>
+                </div>
               </div>
             ))
           )
@@ -333,33 +392,91 @@ const Friends = () => {
 
         {/* Requests Tab */}
         {tab === "requests" && (
-          pendingReceived.length === 0 ? (
+          totalPending === 0 ? (
             <div className="text-center py-16">
               <UserPlus className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
               <p className="text-foreground font-semibold">No pending requests</p>
             </div>
           ) : (
-            pendingReceived.map(req => {
-              const senderProfile = allUsers.find(u => u.user_id === req.sender_id);
-              return (
-                <div key={req.id} className="glass-card p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                    style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>
-                    {senderProfile?.name?.charAt(0).toUpperCase() || "?"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground">{senderProfile?.name || "User"}</p>
-                    <p className="text-xs text-muted-foreground">Wants to be friends</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => acceptRequest(req.id)}
-                      className="p-2 rounded-full bg-primary/20"><Check className="w-4 h-4 text-primary" /></button>
-                    <button onClick={() => rejectRequest(req.id)}
-                      className="p-2 rounded-full bg-destructive/20"><X className="w-4 h-4 text-destructive" /></button>
-                  </div>
+            <div className="space-y-4">
+              {/* INCOMING */}
+              {pendingReceived.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+                    Incoming ({pendingReceived.length})
+                  </p>
+                  {pendingReceived.map(req => {
+                    const p = requestProfiles[req.sender_id];
+                    return (
+                      <div key={req.id} className="glass-card p-4 flex items-center gap-3">
+                        {p ? <Avatar u={p} /> : (
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                            style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>?</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-bold text-foreground truncate">{p?.name || "User"}</p>
+                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-0.5"
+                              style={{ background: 'hsla(145, 70%, 45%, 0.18)', color: 'hsl(145 70% 60%)' }}>
+                              <ArrowDownLeft className="w-2.5 h-2.5" /> Incoming
+                            </span>
+                          </div>
+                          {p && <p className="text-xs text-muted-foreground truncate">{p.goal_emoji} {p.goal_label}</p>}
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button onClick={() => acceptRequest(req.id)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-primary-foreground"
+                            style={{ background: 'linear-gradient(135deg, hsl(145 70% 45%), hsl(145 70% 38%))' }}>
+                            <Check className="w-3.5 h-3.5" /> Accept
+                          </button>
+                          <button onClick={() => rejectRequest(req.id)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border border-destructive/40 text-destructive hover:bg-destructive/10">
+                            <X className="w-3.5 h-3.5" /> Decline
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })
+              )}
+
+              {/* OUTGOING */}
+              {pendingSent.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+                    Outgoing ({pendingSent.length})
+                  </p>
+                  {pendingSent.map(req => {
+                    const p = requestProfiles[req.receiver_id];
+                    return (
+                      <div key={req.id} className="glass-card p-4 flex items-center gap-3">
+                        {p ? <Avatar u={p} /> : (
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                            style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>?</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-bold text-foreground truncate">{p?.name || "User"}</p>
+                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-0.5"
+                              style={{ background: 'hsla(25, 90%, 55%, 0.18)', color: 'hsl(25 90% 65%)' }}>
+                              <ArrowUpRight className="w-2.5 h-2.5" /> Outgoing
+                            </span>
+                          </div>
+                          {p && <p className="text-xs text-muted-foreground truncate">{p.goal_emoji} {p.goal_label}</p>}
+                          <p className="text-[10px] text-muted-foreground/70 mt-0.5 flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" /> Pending...
+                          </p>
+                        </div>
+                        <button onClick={() => cancelRequest(req.id)}
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:bg-muted/30 flex-shrink-0">
+                          Cancel
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )
         )}
 

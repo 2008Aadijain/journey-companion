@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail, Bot, ExternalLink } from "lucide-react";
+import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail, Bot, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/hooks/useI18n";
+import { useBackground, BG_PRESETS, type BgPreset } from "@/hooks/useBackground";
+import { isAiActive } from "@/lib/gemini";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +32,10 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const { theme, accentColor, fontSize, setTheme, setAccentColor, setFontSize } = useTheme();
   const { lang, setLang, t } = useI18n();
+  const { preset, setPreset } = useBackground();
+  const aiActive = isAiActive();
   const { toast } = useToast();
+  const [showBgPicker, setShowBgPicker] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(profile?.name || "");
   const [uploading, setUploading] = useState(false);
@@ -249,6 +254,52 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
                   {fs.label}
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Background */}
+          <button onClick={() => setShowBgPicker(!showBgPicker)}
+            className="w-full flex items-center gap-3 py-3 text-left">
+            <ImageIcon className="w-5 h-5 text-muted-foreground" />
+            <span className="flex-1 text-sm font-medium text-foreground">Background</span>
+            <span className="text-xs text-muted-foreground capitalize">
+              {BG_PRESETS.find(p => p.value === preset)?.emoji} {BG_PRESETS.find(p => p.value === preset)?.label}
+            </span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          {showBgPicker && (
+            <div className="px-8 pb-3 space-y-2">
+              {!aiActive && (
+                <p className="text-[10px] text-muted-foreground/70">
+                  ✨ Activate AI Power to unlock animated backgrounds
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                {BG_PRESETS.map(p => {
+                  const locked = p.aiOnly && !aiActive && p.value !== "minimal";
+                  const selected = preset === p.value;
+                  return (
+                    <button
+                      key={p.value}
+                      disabled={locked}
+                      onClick={() => { setPreset(p.value, true); toast({ title: `Background: ${p.label} ${p.emoji}` }); }}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all ${
+                        selected
+                          ? "bg-primary/20 border border-primary/50 text-foreground"
+                          : "glass-card text-muted-foreground"
+                      } ${locked ? "opacity-40 cursor-not-allowed" : ""}`}
+                    >
+                      <span className="text-base mr-1">{p.emoji}</span> {p.label}
+                      {locked && <span className="block text-[9px] mt-0.5 text-muted-foreground/70">AI only</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {aiActive && (
+                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                  Backgrounds rotate daily for AI users. Pick one to lock your choice.
+                </p>
+              )}
             </div>
           )}
 

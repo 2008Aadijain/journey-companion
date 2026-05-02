@@ -473,7 +473,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      {aiActivated && <AiBackground />}
+      <AiBackground />
       <AiKeyPopup
         open={showAiPopup}
         onClose={() => setShowAiPopup(false)}
@@ -524,25 +524,28 @@ const Dashboard = () => {
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between px-5 py-3.5 max-w-lg mx-auto">
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalCircle</h1>
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-5 py-3.5 max-w-lg mx-auto">
+          {/* Left: Logo */}
+          <h1 className="text-xl font-black text-gradient-hero tracking-tight">GoalCircle</h1>
+
+          {/* Center: AI Powered badge */}
+          <div className="flex justify-center">
             {aiActivated && (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap"
                 style={{ background: 'hsla(160, 80%, 45%, 0.15)', color: '#00E5A0', border: '1px solid hsla(160, 80%, 45%, 0.3)' }}>
                 ✨ AI Powered
               </span>
             )}
           </div>
+
+          {/* Right: XP + Avatar + Settings */}
           <div className="flex items-center gap-2">
-            {/* XP Badge */}
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-full animate-xp-pulse"
               style={{ background: 'hsla(258, 80%, 50%, 0.15)', border: '1px solid hsla(258, 100%, 62%, 0.2)' }}>
               <Zap className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-black text-primary">{profile.xp ?? 0}</span>
             </div>
 
-            {/* Avatar */}
             <button onClick={() => navigate("/profile")} className="relative">
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover border-2 border-border/40" />
@@ -554,7 +557,6 @@ const Dashboard = () => {
               )}
             </button>
 
-            {/* Settings */}
             <button onClick={() => setSettingsOpen(true)} className="p-2 rounded-full hover:bg-muted/50 transition-colors">
               <MoreVertical className="w-4 h-4 text-muted-foreground" />
             </button>

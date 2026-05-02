@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Users, ChevronRight, X } from "lucide-react";
+import { ArrowLeft, Send, Users, ChevronRight, X, UserPlus, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface MemberProfile {
@@ -23,7 +24,9 @@ const GroupChat = () => {
   const [memberCount, setMemberCount] = useState(0);
   const [members, setMembers] = useState<MemberProfile[]>([]);
   const [showMembers, setShowMembers] = useState(false);
+  const [friendStatus, setFriendStatus] = useState<Record<string, "none" | "pending" | "accepted">>({});
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const category = profile?.goal_category || "";
 
@@ -47,6 +50,18 @@ const GroupChat = () => {
         .eq("goal_category", category);
       setMemberCount(count || 0);
       if (data) setMembers(data);
+
+      // Load friend statuses with everyone in the group
+      const { data: reqs } = await supabase
+        .from("friend_requests")
+        .select("sender_id, receiver_id, status")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+      const map: Record<string, "none" | "pending" | "accepted"> = {};
+      (reqs || []).forEach(r => {
+        const otherId = r.sender_id === user.id ? r.receiver_id : r.sender_id;
+        map[otherId] = r.status === "accepted" ? "accepted" : "pending";
+      });
+      setFriendStatus(map);
     };
 
     loadMessages();
@@ -80,6 +95,18 @@ const GroupChat = () => {
   const getMemberAvatar = (senderId: string) => {
     const m = members.find(m => m.user_id === senderId);
     return m?.avatar_url;
+  };
+
+  const addFriend = async (receiverId: string) => {
+    if (!user) return;
+    setFriendStatus(prev => ({ ...prev, [receiverId]: "pending" }));
+    const { error } = await supabase.from("friend_requests").insert({ sender_id: user.id, receiver_id: receiverId });
+    if (error) {
+      setFriendStatus(prev => ({ ...prev, [receiverId]: "none" }));
+      toast({ title: "Could not send request", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Friend request sent! 🤝" });
   };
 
   if (loading || !profile) return (
@@ -126,30 +153,53 @@ const GroupChat = () => {
               </button>
             </div>
             <div className="px-5 py-3 overflow-y-auto" style={{ maxHeight: 'calc(70vh - 60px)' }}>
-              {members.map(m => (
-                <button key={m.user_id}
-                  onClick={() => { setShowMembers(false); /* could navigate to profile */ }}
-                  className="w-full flex items-center gap-3 py-3 border-b border-border/10 text-left">
-                  {m.avatar_url ? (
-                    <img src={m.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                      style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>
-                      {m.name.charAt(0).toUpperCase()}
+              {members.map(m => {
+                const isMe = m.user_id === user?.id;
+                const status = friendStatus[m.user_id] || "none";
+                return (
+                  <div key={m.user_id}
+                    className="w-full flex items-center gap-3 py-3 border-b border-border/10 text-left">
+                    {m.avatar_url ? (
+                      <img src={m.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                        style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>
+                        {m.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">
+                        {m.name} {isMe && <span className="text-primary text-xs">(You)</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{m.goal_emoji} {m.goal_label}</p>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground">
-                      {m.name} {m.user_id === user?.id && <span className="text-primary text-xs">(You)</span>}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{m.goal_emoji} {m.goal_label}</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-0.5">
+                        <span className="text-xs">🔥</span>
+                        <span className="text-xs font-bold text-secondary">{m.streak}</span>
+                      </div>
+                      {!isMe && status === "none" && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); addFriend(m.user_id); }}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold text-primary-foreground"
+                          style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}
+                        >
+                          <UserPlus className="w-3 h-3" /> Add
+                        </button>
+                      )}
+                      {!isMe && status === "pending" && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-muted-foreground glass-card">Pending</span>
+                      )}
+                      {!isMe && status === "accepted" && (
+                        <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                          style={{ background: 'hsla(145, 70%, 45%, 0.18)', color: 'hsl(145 70% 60%)' }}>
+                          <Check className="w-3 h-3" /> Friends
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs">🔥</span>
-                    <span className="text-xs font-bold text-secondary">{m.streak}</span>
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
