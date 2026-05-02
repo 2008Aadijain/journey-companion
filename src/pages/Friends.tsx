@@ -217,6 +217,8 @@ const Friends = () => {
   };
 
   const pendingReceived = friendRequests.filter(r => r.receiver_id === user?.id && r.status === "pending");
+  const pendingSent = friendRequests.filter(r => r.sender_id === user?.id && r.status === "pending");
+  const totalPending = pendingReceived.length + pendingSent.length;
 
   const Avatar = ({ u }: { u: UserProfile }) => u.avatar_url
     ? <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
@@ -254,7 +256,7 @@ const Friends = () => {
         <div className="flex max-w-lg mx-auto px-4 pb-2 gap-2">
           {([
             { key: "friends" as Tab, label: "Friends", count: friends.length },
-            { key: "requests" as Tab, label: "Requests", count: pendingReceived.length },
+            { key: "requests" as Tab, label: "Requests", count: totalPending },
             { key: "groups" as Tab, label: "Groups", count: groups.length },
           ]).map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
