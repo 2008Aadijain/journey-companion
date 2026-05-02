@@ -86,6 +86,23 @@ const Friends = () => {
       setFriends([]);
     }
 
+    // Load profiles for ALL users in pending requests (incoming + outgoing)
+    const pendingReqs = (reqs || []).filter(r => r.status === "pending");
+    const otherIds = Array.from(new Set(pendingReqs.map(r => r.sender_id === user.id ? r.receiver_id : r.sender_id)));
+    if (otherIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, name, goal_label, goal_emoji, streak, avatar_url, goal_category")
+        .in("user_id", otherIds);
+      if (profs) {
+        const map: Record<string, UserProfile> = {};
+        profs.forEach(p => { map[p.user_id] = p; });
+        setRequestProfiles(map);
+      }
+    } else {
+      setRequestProfiles({});
+    }
+
     // Load groups
     const { data: grps } = await supabase.from("friend_groups").select("*");
     if (grps) setGroups(grps);
@@ -110,7 +127,46 @@ const Friends = () => {
   const sendRequest = async (receiverId: string) => {
     if (!user) return;
     await supabase.from("friend_requests").insert({ sender_id: user.id, receiver_id: receiverId });
+    toast({ title: "Friend request sent! 🤝" });
     loadData();
+  };
+
+  const acceptRequest = async (requestId: string) => {
+    await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", requestId);
+    if (user && profile) {
+      await supabase.from("profiles").update({ xp: (profile.xp ?? 0) + 5 }).eq("user_id", user.id);
+      setXpGain(5);
+      setShowXp(true);
+    }
+    toast({ title: "You're now friends! 🎉" });
+    loadData();
+  };
+
+  const cancelRequest = async (requestId: string) => {
+    await supabase.from("friend_requests").delete().eq("id", requestId);
+    toast({ title: "Request cancelled" });
+    loadData();
+  };
+
+  const messageFriend = async (friendId: string) => {
+    if (!user || !profile) return;
+    // Find or create a match between the two
+    const { data: existing } = await supabase
+      .from("matches")
+      .select("*")
+      .or(`and(user1_id.eq.${user.id},user2_id.eq.${friendId}),and(user1_id.eq.${friendId},user2_id.eq.${user.id})`)
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      navigate(`/chat/${existing.id}`);
+      return;
+    }
+    const { data: created } = await supabase
+      .from("matches")
+      .insert({ user1_id: user.id, user2_id: friendId, goal_category: profile.goal_category })
+      .select()
+      .single();
+    if (created) navigate(`/chat/${created.id}`);
   };
 
   const acceptRequest = async (requestId: string) => {
