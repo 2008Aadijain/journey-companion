@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail, Bot, ExternalLink } from "lucide-react";
+import { X, User, Camera, Bell, Info, LogOut, ChevronRight, Moon, Sun, Palette, Type, Clock, Globe, Trash2, Lock, Mail, Bot, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/hooks/useI18n";
+import { useBackground, BG_PRESETS, type BgPreset } from "@/hooks/useBackground";
+import { isAiActive } from "@/lib/gemini";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +32,10 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const { theme, accentColor, fontSize, setTheme, setAccentColor, setFontSize } = useTheme();
   const { lang, setLang, t } = useI18n();
+  const { preset, setPreset } = useBackground();
+  const aiActive = isAiActive();
   const { toast } = useToast();
+  const [showBgPicker, setShowBgPicker] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(profile?.name || "");
   const [uploading, setUploading] = useState(false);
