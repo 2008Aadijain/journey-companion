@@ -812,7 +812,7 @@ const Dashboard = () => {
                   </a>
                 ))
               ) : (!aiActivated || (!aiVideosLoading && (!aiVideos || aiVideos.length === 0))) && (
-                getVideosForCategory(profile.goal_category).map((video, i) => (
+                getVideosForCategory(profile.goal_category, profile.goal_label).map((video, i) => (
                   <a key={i} href={video.url} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
                     style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
