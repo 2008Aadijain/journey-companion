@@ -169,17 +169,6 @@ const Friends = () => {
     if (created) navigate(`/chat/${created.id}`);
   };
 
-  const acceptRequest = async (requestId: string) => {
-    await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", requestId);
-    // Award XP for accepting friend
-    if (user && profile) {
-      await supabase.from("profiles").update({ xp: (profile.xp ?? 0) + 5 }).eq("user_id", user.id);
-      setXpGain(5);
-      setShowXp(true);
-    }
-    loadData();
-  };
-
   const cheerFriend = async (friendId: string) => {
     if (!user || !profile) return;
     // Award +2 XP to both
@@ -194,6 +183,7 @@ const Friends = () => {
 
   const rejectRequest = async (requestId: string) => {
     await supabase.from("friend_requests").delete().eq("id", requestId);
+    toast({ title: "Request declined" });
     loadData();
   };
 
