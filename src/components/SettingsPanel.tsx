@@ -257,6 +257,52 @@ const SettingsPanel = ({ open, onClose, onLogout }: SettingsPanelProps) => {
             </div>
           )}
 
+          {/* Background */}
+          <button onClick={() => setShowBgPicker(!showBgPicker)}
+            className="w-full flex items-center gap-3 py-3 text-left">
+            <ImageIcon className="w-5 h-5 text-muted-foreground" />
+            <span className="flex-1 text-sm font-medium text-foreground">Background</span>
+            <span className="text-xs text-muted-foreground capitalize">
+              {BG_PRESETS.find(p => p.value === preset)?.emoji} {BG_PRESETS.find(p => p.value === preset)?.label}
+            </span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          {showBgPicker && (
+            <div className="px-8 pb-3 space-y-2">
+              {!aiActive && (
+                <p className="text-[10px] text-muted-foreground/70">
+                  ✨ Activate AI Power to unlock animated backgrounds
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                {BG_PRESETS.map(p => {
+                  const locked = p.aiOnly && !aiActive && p.value !== "minimal";
+                  const selected = preset === p.value;
+                  return (
+                    <button
+                      key={p.value}
+                      disabled={locked}
+                      onClick={() => { setPreset(p.value, true); toast({ title: `Background: ${p.label} ${p.emoji}` }); }}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all ${
+                        selected
+                          ? "bg-primary/20 border border-primary/50 text-foreground"
+                          : "glass-card text-muted-foreground"
+                      } ${locked ? "opacity-40 cursor-not-allowed" : ""}`}
+                    >
+                      <span className="text-base mr-1">{p.emoji}</span> {p.label}
+                      {locked && <span className="block text-[9px] mt-0.5 text-muted-foreground/70">AI only</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {aiActive && (
+                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                  Backgrounds rotate daily for AI users. Pick one to lock your choice.
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="h-px bg-border/30 my-1" />
 
           {/* ═══ PROFILE SETTINGS ═══ */}
