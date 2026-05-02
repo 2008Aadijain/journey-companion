@@ -116,8 +116,8 @@ const AiBackground = () => {
         }
         @keyframes ai-trail {
           0%   { transform: translateY(110vh) translateX(0); opacity: 0; }
-          10%  { opacity: 1; }
-          90%  { opacity: 1; }
+          10%  { opacity: 0.08; }
+          90%  { opacity: 0.08; }
           100% { transform: translateY(-10vh) translateX(40px); opacity: 0; }
         }
         @keyframes ai-border-flow {
@@ -125,11 +125,15 @@ const AiBackground = () => {
           100% { background-position: 200% 50%; }
         }
       `}</style>
-      <div className="fixed inset-0 -z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {/* Soft radial gradient backdrop */}
+      <div
+        className="fixed inset-0 pointer-events-none overflow-hidden"
+        style={{ zIndex: -1 }}
+        aria-hidden="true"
+      >
+        {/* Soft radial gradient backdrop — very subtle */}
         <div style={{
           position: "absolute", inset: 0,
-          background: "radial-gradient(ellipse at 30% 20%, hsla(258, 80%, 30%, 0.18), transparent 50%), radial-gradient(ellipse at 75% 80%, hsla(180, 80%, 30%, 0.12), transparent 50%), radial-gradient(ellipse at 20% 80%, hsla(8, 80%, 40%, 0.10), transparent 50%)",
+          background: "radial-gradient(ellipse at 30% 20%, hsla(258, 80%, 30%, 0.06), transparent 50%), radial-gradient(ellipse at 75% 80%, hsla(180, 80%, 30%, 0.04), transparent 50%), radial-gradient(ellipse at 20% 80%, hsla(8, 80%, 40%, 0.04), transparent 50%)",
         }} />
         {shapes.map(s => <ShapeEl key={s.id} s={s} />)}
         {/* Particle trails */}
@@ -141,7 +145,8 @@ const AiBackground = () => {
             width: t.size, height: t.size,
             borderRadius: "50%",
             background: t.color,
-            boxShadow: `0 0 ${t.size * 4}px ${t.color}`,
+            opacity: 0.08,
+            boxShadow: `0 0 ${t.size * 2}px ${t.color}`,
             animation: `ai-trail ${t.duration}s linear ${t.delay}s infinite`,
             willChange: "transform, opacity",
           }} />
