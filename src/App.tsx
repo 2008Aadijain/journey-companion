@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { I18nProvider } from "@/hooks/useI18n";
+import { BackgroundProvider } from "@/hooks/useBackground";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import GoalSetup from "./pages/GoalSetup.tsx";
@@ -31,6 +32,7 @@ const App = () => (
         <AuthProvider>
           <ThemeProvider>
           <I18nProvider>
+          <BackgroundProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -47,6 +49,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </BackgroundProvider>
           </I18nProvider>
           </ThemeProvider>
         </AuthProvider>
