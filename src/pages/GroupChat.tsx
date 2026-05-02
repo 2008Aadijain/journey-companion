@@ -24,7 +24,9 @@ const GroupChat = () => {
   const [memberCount, setMemberCount] = useState(0);
   const [members, setMembers] = useState<MemberProfile[]>([]);
   const [showMembers, setShowMembers] = useState(false);
+  const [friendStatus, setFriendStatus] = useState<Record<string, "none" | "pending" | "accepted">>({});
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const category = profile?.goal_category || "";
 
