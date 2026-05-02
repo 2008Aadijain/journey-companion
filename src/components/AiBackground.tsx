@@ -107,8 +107,8 @@ const AiBackground = () => {
     <>
       <style>{`
         @keyframes ai-float {
-          0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.65; }
-          50% { transform: translate3d(14px, -34px, 0) scale(1.08); opacity: 1; }
+          0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.08; }
+          50% { transform: translate3d(14px, -34px, 0) scale(1.08); opacity: 0.12; }
         }
         @keyframes ai-spin {
           from { filter: hue-rotate(0deg); }
