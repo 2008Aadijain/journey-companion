@@ -50,6 +50,18 @@ const GroupChat = () => {
         .eq("goal_category", category);
       setMemberCount(count || 0);
       if (data) setMembers(data);
+
+      // Load friend statuses with everyone in the group
+      const { data: reqs } = await supabase
+        .from("friend_requests")
+        .select("sender_id, receiver_id, status")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+      const map: Record<string, "none" | "pending" | "accepted"> = {};
+      (reqs || []).forEach(r => {
+        const otherId = r.sender_id === user.id ? r.receiver_id : r.sender_id;
+        map[otherId] = r.status === "accepted" ? "accepted" : "pending";
+      });
+      setFriendStatus(map);
     };
 
     loadMessages();
@@ -83,6 +95,18 @@ const GroupChat = () => {
   const getMemberAvatar = (senderId: string) => {
     const m = members.find(m => m.user_id === senderId);
     return m?.avatar_url;
+  };
+
+  const addFriend = async (receiverId: string) => {
+    if (!user) return;
+    setFriendStatus(prev => ({ ...prev, [receiverId]: "pending" }));
+    const { error } = await supabase.from("friend_requests").insert({ sender_id: user.id, receiver_id: receiverId });
+    if (error) {
+      setFriendStatus(prev => ({ ...prev, [receiverId]: "none" }));
+      toast({ title: "Could not send request", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Friend request sent! 🤝" });
   };
 
   if (loading || !profile) return (
