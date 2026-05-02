@@ -4,43 +4,67 @@ export interface VideoResource {
   url: string;
 }
 
-const YOUTUBE_RESOURCES: Record<string, VideoResource[]> = {
-  Creative: [
-    { title: "Figma Tutorial Hindi", thumbnail: "https://img.youtube.com/vi/FTFaQWZBqQ8/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=figma+tutorial+hindi" },
-    { title: "UI Design for Beginners", thumbnail: "https://img.youtube.com/vi/c9Wg6Cb_YlU/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=ui+design+figma+hindi" },
-    { title: "Canva Design Tips & Tricks", thumbnail: "https://img.youtube.com/vi/zJSg8fCDfBo/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=canva+design+tutorial+hindi" },
+const thumb = (id: string) => `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+const watch = (id: string) => `https://www.youtube.com/watch?v=${id}`;
+const v = (title: string, id: string): VideoResource => ({ title, thumbnail: thumb(id), url: watch(id) });
+
+// Keyed by goal_label (matches what's stored in profile.goal_label)
+const VIDEOS_BY_GOAL: Record<string, VideoResource[]> = {
+  "Learn Figma": [
+    v("Figma Tutorial Hindi", "II-6dDzc-80"),
+    v("UI Design Beginners", "_K06Dni-RE4"),
+    v("Figma Complete Course", "HZuk6Wkx_Eg"),
   ],
-  Learning: [
-    { title: "Python Tutorial Hindi", thumbnail: "https://img.youtube.com/vi/gfDE2a7MKjA/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=python+tutorial+hindi+beginners" },
-    { title: "Python Projects for Beginners", thumbnail: "https://img.youtube.com/vi/zOjov-2OZ0E/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=python+projects+hindi" },
-    { title: "Web Development Hindi", thumbnail: "https://img.youtube.com/vi/5_5oE5lgrhw/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=web+development+hindi" },
+  "Learn Python": [
+    v("Python Hindi Tutorial", "UrsmFxEIp5k"),
+    v("Python for Beginners", "_uQrJ0TkZlc"),
+    v("Python Projects", "8ext9G7xspg"),
   ],
-  Fitness: [
-    { title: "Home Workout for Beginners", thumbnail: "https://img.youtube.com/vi/UBMk30rjy0o/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=home+workout+beginners+hindi" },
-    { title: "Weight Loss Tips Hindi", thumbnail: "https://img.youtube.com/vi/gMaB-fG14UM/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=weight+loss+tips+hindi" },
-    { title: "Yoga for Beginners", thumbnail: "https://img.youtube.com/vi/v7AYKMP6rOE/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=yoga+beginners+hindi" },
+  "Learn Coding": [
+    v("Web Dev Hindi", "tVzUXW6siu0"),
+    v("HTML CSS Hindi", "BsDoLVMnmZs"),
+    v("JavaScript Hindi", "hKB-YGF14SY"),
   ],
-  Business: [
-    { title: "Business Ideas Hindi", thumbnail: "https://img.youtube.com/vi/ZZ7Nb07N5Qk/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=business+ideas+hindi+2026" },
-    { title: "How to Start Startup", thumbnail: "https://img.youtube.com/vi/wvVPdyYeaQU/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=startup+kaise+shuru+kare+hindi" },
-    { title: "Marketing Tips for Beginners", thumbnail: "https://img.youtube.com/vi/KQya6I68Xu4/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=marketing+tips+hindi" },
+  "Lose Weight": [
+    v("Home Workout Hindi", "UItWltVZZmE"),
+    v("Weight Loss Tips", "8Sm0sKwCwRs"),
+    v("Yoga for Beginners", "v7AYKMP6rOE"),
   ],
-  Career: [
-    { title: "Spoken English Hindi", thumbnail: "https://img.youtube.com/vi/M-v7EkuY_r4/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=spoken+english+hindi" },
-    { title: "English Speaking Practice", thumbnail: "https://img.youtube.com/vi/1qw5ITr3k9E/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=english+speaking+practice+hindi" },
-    { title: "Resume Kaise Banaye", thumbnail: "https://img.youtube.com/vi/y8YH0Qbu5h4/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=resume+kaise+banaye+hindi" },
-    { title: "Interview Tips Hindi", thumbnail: "https://img.youtube.com/vi/1qw5ITr3k9E/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=interview+tips+hindi" },
+  "Start Business": [
+    v("Business Ideas Hindi", "ZpzNzjMOJtY"),
+    v("Startup Tips Hindi", "9pobMYmCGzQ"),
+    v("Marketing Tips", "oBYzH2bJSbg"),
   ],
-  Reading: [
-    { title: "Reading Habit Kaise Banaye", thumbnail: "https://img.youtube.com/vi/gfDE2a7MKjA/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=reading+habit+kaise+banaye" },
-    { title: "Best Books Summary Hindi", thumbnail: "https://img.youtube.com/vi/zOjov-2OZ0E/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=best+books+summary+hindi" },
+  "Improve English": [
+    v("Spoken English Hindi", "_9WTPF-J3mY"),
+    v("English Speaking", "53bVMMLiLDY"),
+    v("English Grammar", "9o5zAMEHCYQ"),
   ],
-  Custom: [
-    { title: "Productivity Tips Hindi", thumbnail: "https://img.youtube.com/vi/gfDE2a7MKjA/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=productivity+tips+hindi" },
-    { title: "Goal Setting Guide Hindi", thumbnail: "https://img.youtube.com/vi/zOjov-2OZ0E/mqdefault.jpg", url: "https://www.youtube.com/results?search_query=goal+setting+guide+hindi" },
+  "Get a Job": [
+    v("Resume Kaise Banaye", "y8YH0Qbu5h4"),
+    v("Interview Tips Hindi", "HG68Ymazo18"),
+    v("Job Search Tips", "BVPiAMWABu8"),
+  ],
+  "Build Reading Habit": [
+    v("Reading Habit Hindi", "YQOrqAKKcUQ"),
+    v("Book Summary Hindi", "7bB_KgjCa_A"),
+    v("Speed Reading Tips", "ZwEquW_Yij0"),
   ],
 };
 
-export const getVideosForCategory = (category: string): VideoResource[] => {
-  return YOUTUBE_RESOURCES[category] || YOUTUBE_RESOURCES.Learning;
+// Fallback by category for older/custom goals
+const VIDEOS_BY_CATEGORY: Record<string, VideoResource[]> = {
+  Creative: VIDEOS_BY_GOAL["Learn Figma"],
+  Learning: VIDEOS_BY_GOAL["Learn Python"],
+  Fitness: VIDEOS_BY_GOAL["Lose Weight"],
+  Business: VIDEOS_BY_GOAL["Start Business"],
+  Career: VIDEOS_BY_GOAL["Get a Job"],
+  Reading: VIDEOS_BY_GOAL["Build Reading Habit"],
+  Custom: VIDEOS_BY_GOAL["Learn Python"],
+};
+
+export const getVideosForCategory = (categoryOrLabel: string, goalLabel?: string): VideoResource[] => {
+  if (goalLabel && VIDEOS_BY_GOAL[goalLabel]) return VIDEOS_BY_GOAL[goalLabel];
+  if (VIDEOS_BY_GOAL[categoryOrLabel]) return VIDEOS_BY_GOAL[categoryOrLabel];
+  return VIDEOS_BY_CATEGORY[categoryOrLabel] || VIDEOS_BY_CATEGORY.Learning;
 };

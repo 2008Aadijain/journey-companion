@@ -17,10 +17,10 @@ interface Shape {
 }
 
 const PALETTE = [
-  { c: "hsla(258, 100%, 65%, 0.55)", g: "hsla(258, 100%, 65%, 0.45)" }, // purple
-  { c: "hsla(180, 95%, 60%, 0.50)",  g: "hsla(180, 95%, 60%, 0.40)" },  // cyan
-  { c: "hsla(8, 95%, 68%, 0.50)",    g: "hsla(8, 95%, 68%, 0.40)" },    // coral
-  { c: "hsla(285, 95%, 65%, 0.55)",  g: "hsla(285, 95%, 65%, 0.45)" },  // magenta
+  { c: "hsla(258, 100%, 65%, 0.08)", g: "hsla(258, 100%, 65%, 0.08)" }, // purple
+  { c: "hsla(180, 95%, 60%, 0.08)",  g: "hsla(180, 95%, 60%, 0.08)" },  // cyan
+  { c: "hsla(8, 95%, 68%, 0.08)",    g: "hsla(8, 95%, 68%, 0.08)" },    // coral
+  { c: "hsla(285, 95%, 65%, 0.08)",  g: "hsla(285, 95%, 65%, 0.08)" },  // magenta
 ];
 
 const ShapeEl = ({ s }: { s: Shape }) => {
@@ -33,7 +33,8 @@ const ShapeEl = ({ s }: { s: Shape }) => {
     animation: `ai-float ${s.duration}s ease-in-out ${s.delay}s infinite, ai-spin ${s.duration * 1.5}s linear ${s.delay}s infinite`,
     willChange: "transform, opacity",
     pointerEvents: "none",
-    filter: `drop-shadow(0 0 ${s.size * 0.6}px ${s.glow})`,
+    opacity: 0.08,
+    filter: `drop-shadow(0 0 ${s.size * 0.3}px ${s.glow})`,
   };
 
   if (s.type === "tri") {
@@ -107,8 +108,8 @@ const AiBackground = () => {
     <>
       <style>{`
         @keyframes ai-float {
-          0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.65; }
-          50% { transform: translate3d(14px, -34px, 0) scale(1.08); opacity: 1; }
+          0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.08; }
+          50% { transform: translate3d(14px, -34px, 0) scale(1.08); opacity: 0.12; }
         }
         @keyframes ai-spin {
           from { filter: hue-rotate(0deg); }
@@ -116,8 +117,8 @@ const AiBackground = () => {
         }
         @keyframes ai-trail {
           0%   { transform: translateY(110vh) translateX(0); opacity: 0; }
-          10%  { opacity: 1; }
-          90%  { opacity: 1; }
+          10%  { opacity: 0.08; }
+          90%  { opacity: 0.08; }
           100% { transform: translateY(-10vh) translateX(40px); opacity: 0; }
         }
         @keyframes ai-border-flow {
@@ -125,11 +126,15 @@ const AiBackground = () => {
           100% { background-position: 200% 50%; }
         }
       `}</style>
-      <div className="fixed inset-0 -z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {/* Soft radial gradient backdrop */}
+      <div
+        className="fixed inset-0 pointer-events-none overflow-hidden"
+        style={{ zIndex: -1 }}
+        aria-hidden="true"
+      >
+        {/* Soft radial gradient backdrop — very subtle */}
         <div style={{
           position: "absolute", inset: 0,
-          background: "radial-gradient(ellipse at 30% 20%, hsla(258, 80%, 30%, 0.18), transparent 50%), radial-gradient(ellipse at 75% 80%, hsla(180, 80%, 30%, 0.12), transparent 50%), radial-gradient(ellipse at 20% 80%, hsla(8, 80%, 40%, 0.10), transparent 50%)",
+          background: "radial-gradient(ellipse at 30% 20%, hsla(258, 80%, 30%, 0.06), transparent 50%), radial-gradient(ellipse at 75% 80%, hsla(180, 80%, 30%, 0.04), transparent 50%), radial-gradient(ellipse at 20% 80%, hsla(8, 80%, 40%, 0.04), transparent 50%)",
         }} />
         {shapes.map(s => <ShapeEl key={s.id} s={s} />)}
         {/* Particle trails */}
@@ -141,7 +146,8 @@ const AiBackground = () => {
             width: t.size, height: t.size,
             borderRadius: "50%",
             background: t.color,
-            boxShadow: `0 0 ${t.size * 4}px ${t.color}`,
+            opacity: 0.08,
+            boxShadow: `0 0 ${t.size * 2}px ${t.color}`,
             animation: `ai-trail ${t.duration}s linear ${t.delay}s infinite`,
             willChange: "transform, opacity",
           }} />
