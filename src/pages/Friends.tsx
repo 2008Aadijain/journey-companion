@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Users, Plus, Check, X, Flame, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Users, Plus, Check, X, Flame, MessageCircle, Sparkles, Clock, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
+import { useToast } from "@/hooks/use-toast";
 
 type Tab = "friends" | "requests" | "groups";
 
@@ -37,10 +38,12 @@ interface FriendGroup {
 const Friends = () => {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("friends");
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [requestProfiles, setRequestProfiles] = useState<Record<string, UserProfile>>({});
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const [groups, setGroups] = useState<FriendGroup[]>([]);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
