@@ -16,6 +16,7 @@ import AiKeyPopup from "@/components/AiKeyPopup";
 
 import ShareCard from "@/components/ShareCard";
 import { useToast } from "@/hooks/use-toast";
+import { checkBeforeSend } from "@/lib/moderation";
 import { useI18n } from "@/hooks/useI18n";
 import { getAiDailyTask, getAiVideos, youtubeSearchUrl, type AiVideo } from "@/lib/gemini";
 
