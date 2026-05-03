@@ -1,104 +1,141 @@
 // Multi-preset animated background. Always renders behind content (z-index: -1).
-// Presets: electric, space, aurora, matrix, minimal.
+// Presets: electric, space, aurora, matrix, minimal, custom.
 
 import { useMemo } from "react";
 import { useBackground } from "@/hooks/useBackground";
 
 const ElectricBg = () => {
-  // SVG circuit-board-like lines with animated electric arcs.
-  const arcs = useMemo(() => Array.from({ length: 8 }).map((_, i) => ({
-    id: i,
-    delay: Math.random() * 6,
-    duration: 4 + Math.random() * 4,
-    x1: Math.random() * 100,
-    y1: Math.random() * 100,
-    x2: Math.random() * 100,
-    y2: Math.random() * 100,
-    color: i % 2 === 0 ? "hsla(180, 100%, 60%, 0.5)" : "hsla(280, 100%, 65%, 0.5)",
-  })), []);
-  const dots = useMemo(() => Array.from({ length: 24 }).map((_, i) => ({
-    id: i,
-    cx: Math.random() * 100,
-    cy: Math.random() * 100,
-    r: 1 + Math.random() * 2,
-    delay: Math.random() * 5,
-    color: i % 2 === 0 ? "hsl(180, 100%, 65%)" : "hsl(280, 100%, 70%)",
-  })), []);
+  // Generate randomized lightning bolts that flash on screen
+  const bolts = useMemo(() => Array.from({ length: 14 }).map((_, i) => {
+    const isCyan = i % 2 === 0;
+    const startX = Math.random() * 100;
+    const startY = Math.random() * 100;
+    const angle = (Math.random() * 60 - 30) + (Math.random() < 0.5 ? 90 : 0); // mix of horizontal & diagonal
+    const length = 25 + Math.random() * 50;
+    return {
+      id: i,
+      left: startX,
+      top: startY,
+      length,
+      angle,
+      color: isCyan ? "#00FFFF" : "#9B59B6",
+      delay: Math.random() * 8,
+      duration: 0.15 + Math.random() * 0.25,
+      cycle: 4 + Math.random() * 6,
+    };
+  }), []);
 
   return (
     <>
       <style>{`
-        @keyframes electric-flow {
-          0%   { stroke-dashoffset: 200; opacity: 0; }
-          15%  { opacity: 0.7; }
-          85%  { opacity: 0.5; }
-          100% { stroke-dashoffset: 0; opacity: 0; }
+        @keyframes electric-flash {
+          0%, 100% { opacity: 0; }
+          2% { opacity: 0.4; }
+          4% { opacity: 0; }
+          6% { opacity: 0.35; }
+          8% { opacity: 0; }
         }
-        @keyframes electric-pulse {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50%      { opacity: 0.9; transform: scale(1.4); }
+        @keyframes electric-fullflash {
+          0%, 100% { opacity: 0; }
+          50% { opacity: 0.05; }
+          51% { opacity: 0; }
         }
       `}</style>
-      <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
-        style={{ position: "absolute", inset: 0, opacity: 0.18 }}>
-        {/* Static circuit grid */}
-        {Array.from({ length: 6 }).map((_, i) => (
-          <line key={`gh-${i}`} x1="0" y1={i * 20} x2="100" y2={i * 20}
-            stroke="hsla(180, 80%, 50%, 0.25)" strokeWidth="0.1" />
-        ))}
-        {Array.from({ length: 6 }).map((_, i) => (
-          <line key={`gv-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="100"
-            stroke="hsla(280, 80%, 60%, 0.25)" strokeWidth="0.1" />
-        ))}
-        {/* Animated arcs */}
-        {arcs.map(a => (
-          <line key={`a-${a.id}`} x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2}
-            stroke={a.color} strokeWidth="0.3" strokeLinecap="round"
-            strokeDasharray="4 200"
-            style={{ animation: `electric-flow ${a.duration}s linear ${a.delay}s infinite`, filter: `drop-shadow(0 0 1px ${a.color})` }} />
-        ))}
-        {/* Pulsing dots (nodes) */}
-        {dots.map(d => (
-          <circle key={`d-${d.id}`} cx={d.cx} cy={d.cy} r={d.r / 8}
-            fill={d.color}
-            style={{
-              animation: `electric-pulse ${2 + Math.random() * 3}s ease-in-out ${d.delay}s infinite`,
-              transformOrigin: `${d.cx}px ${d.cy}px`,
-              filter: `drop-shadow(0 0 0.4px ${d.color})`,
-            }} />
-        ))}
-      </svg>
+      {/* Occasional full-screen white flash */}
+      <div style={{
+        position: "absolute", inset: 0, background: "white",
+        animation: "electric-fullflash 7s ease-in-out infinite",
+      }} />
+      {bolts.map(b => (
+        <div key={b.id} style={{
+          position: "absolute",
+          left: `${b.left}%`,
+          top: `${b.top}%`,
+          width: `${b.length}vmax`,
+          height: 3,
+          background: `linear-gradient(90deg, transparent, ${b.color} 20%, ${b.color} 80%, transparent)`,
+          boxShadow: `0 0 8px ${b.color}, 0 0 16px ${b.color}`,
+          transform: `rotate(${b.angle}deg)`,
+          transformOrigin: "left center",
+          opacity: 0,
+          animation: `electric-flash ${b.cycle}s ease-in-out ${b.delay}s infinite`,
+          borderRadius: 2,
+        }} />
+      ))}
     </>
   );
 };
 
 const SpaceBg = () => {
-  const stars = useMemo(() => Array.from({ length: 80 }).map((_, i) => ({
+  const stars = useMemo(() => Array.from({ length: 220 }).map((_, i) => ({
     id: i,
     left: Math.random() * 100,
     top: Math.random() * 100,
-    size: 1 + Math.random() * 2,
-    delay: Math.random() * 5,
-    duration: 2 + Math.random() * 4,
+    size: 0.5 + Math.random() * 2,
+    delay: Math.random() * 6,
+    duration: 2 + Math.random() * 5,
+    baseOp: 0.3 + Math.random() * 0.7,
+  })), []);
+  const shooters = useMemo(() => Array.from({ length: 5 }).map((_, i) => ({
+    id: i,
+    top: Math.random() * 60,
+    delay: i * 12 + Math.random() * 8,
   })), []);
   return (
     <>
       <style>{`
         @keyframes star-twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(0.8); }
-          50%      { opacity: 0.9; transform: scale(1.2); }
+          0%, 100% { opacity: var(--op-min, 0.3); transform: scale(0.85); }
+          50%      { opacity: var(--op-max, 1); transform: scale(1.1); }
+        }
+        @keyframes parallax-drift {
+          0%, 100% { transform: translate3d(0,0,0); }
+          50%      { transform: translate3d(-10px, -5px, 0); }
+        }
+        @keyframes nebula-pulse {
+          0%, 100% { opacity: 0.25; transform: scale(1); }
+          50%      { opacity: 0.45; transform: scale(1.15); }
+        }
+        @keyframes shooting-star {
+          0%   { transform: translate3d(-10vw, 0, 0) rotate(20deg); opacity: 0; }
+          5%   { opacity: 1; }
+          20%  { opacity: 1; }
+          25%  { transform: translate3d(110vw, 40vh, 0) rotate(20deg); opacity: 0; }
+          100% { opacity: 0; }
         }
       `}</style>
-      <div style={{ position: "absolute", inset: 0,
-        background: "radial-gradient(ellipse at 30% 20%, hsla(258, 60%, 25%, 0.25), transparent 60%), radial-gradient(ellipse at 75% 80%, hsla(280, 60%, 20%, 0.2), transparent 60%)",
+      {/* Nebulas */}
+      <div style={{
+        position: "absolute", left: "10%", top: "15%", width: "50vw", height: "50vw",
+        background: "radial-gradient(circle, hsla(258, 80%, 50%, 0.5), transparent 60%)",
+        filter: "blur(60px)", animation: "nebula-pulse 14s ease-in-out infinite",
       }} />
-      {stars.map(s => (
-        <div key={s.id} style={{
-          position: "absolute", left: `${s.left}%`, top: `${s.top}%`,
-          width: s.size, height: s.size, borderRadius: "50%",
-          background: "hsla(0, 0%, 100%, 0.7)",
-          boxShadow: `0 0 ${s.size * 3}px hsla(220, 100%, 80%, 0.4)`,
-          animation: `star-twinkle ${s.duration}s ease-in-out ${s.delay}s infinite`,
+      <div style={{
+        position: "absolute", right: "5%", bottom: "10%", width: "40vw", height: "40vw",
+        background: "radial-gradient(circle, hsla(220, 90%, 55%, 0.4), transparent 60%)",
+        filter: "blur(70px)", animation: "nebula-pulse 18s ease-in-out 3s infinite",
+      }} />
+      <div style={{ position: "absolute", inset: 0, animation: "parallax-drift 30s ease-in-out infinite" }}>
+        {stars.map(s => (
+          <div key={s.id} style={{
+            position: "absolute", left: `${s.left}%`, top: `${s.top}%`,
+            width: s.size, height: s.size, borderRadius: "50%",
+            background: "white",
+            boxShadow: `0 0 ${s.size * 4}px rgba(255,255,255,0.8)`,
+            ["--op-min" as never]: 0.3,
+            ["--op-max" as never]: s.baseOp,
+            animation: `star-twinkle ${s.duration}s ease-in-out ${s.delay}s infinite`,
+          }} />
+        ))}
+      </div>
+      {/* Shooting stars */}
+      {shooters.map(sh => (
+        <div key={sh.id} style={{
+          position: "absolute", top: `${sh.top}%`, left: 0,
+          width: 120, height: 2,
+          background: "linear-gradient(90deg, transparent, white, transparent)",
+          boxShadow: "0 0 8px white, 0 0 16px white",
+          animation: `shooting-star 60s linear ${sh.delay}s infinite`,
         }} />
       ))}
     </>
@@ -108,26 +145,41 @@ const SpaceBg = () => {
 const AuroraBg = () => (
   <>
     <style>{`
-      @keyframes aurora-shift {
-        0%   { transform: translate3d(-10%, 0, 0) rotate(-2deg); }
-        50%  { transform: translate3d(10%, 5%, 0) rotate(2deg); }
-        100% { transform: translate3d(-10%, 0, 0) rotate(-2deg); }
+      @keyframes aurora-flow-1 {
+        0%, 100% { background-position: 0% 0%, 100% 100%; }
+        50%      { background-position: 100% 50%, 0% 50%; }
+      }
+      @keyframes aurora-flow-2 {
+        0%, 100% { background-position: 100% 0%, 0% 100%; }
+        50%      { background-position: 0% 100%, 100% 0%; }
+      }
+      @keyframes aurora-wave {
+        0%, 100% { transform: translateY(0) skewY(0deg); }
+        50%      { transform: translateY(20px) skewY(-2deg); }
       }
     `}</style>
-    {[
-      { c: "hsla(160, 95%, 50%, 0.18)", t: 10, d: 18 },
-      { c: "hsla(258, 95%, 60%, 0.15)", t: 30, d: 22 },
-      { c: "hsla(330, 95%, 60%, 0.12)", t: 55, d: 26 },
-      { c: "hsla(190, 95%, 55%, 0.14)", t: 70, d: 20 },
-    ].map((a, i) => (
-      <div key={i} style={{
-        position: "absolute", left: "-20%", right: "-20%", top: `${a.t}%`,
-        height: "40%",
-        background: `linear-gradient(90deg, transparent, ${a.c} 30%, ${a.c} 70%, transparent)`,
-        filter: "blur(60px)",
-        animation: `aurora-shift ${a.d}s ease-in-out ${i * 1.5}s infinite`,
-      }} />
-    ))}
+    <div style={{
+      position: "absolute", inset: "-20%",
+      background: `
+        radial-gradient(ellipse 60% 40% at 30% 30%, rgba(0, 255, 136, 0.35), transparent 60%),
+        radial-gradient(ellipse 50% 35% at 70% 60%, rgba(123, 47, 190, 0.40), transparent 60%)
+      `,
+      backgroundSize: "200% 200%, 200% 200%",
+      filter: "blur(50px)",
+      opacity: 0.7,
+      animation: "aurora-flow-1 18s ease-in-out infinite, aurora-wave 14s ease-in-out infinite",
+    }} />
+    <div style={{
+      position: "absolute", inset: "-20%",
+      background: `
+        radial-gradient(ellipse 55% 35% at 60% 20%, rgba(0, 191, 255, 0.35), transparent 60%),
+        radial-gradient(ellipse 50% 30% at 25% 75%, rgba(255, 107, 157, 0.30), transparent 60%)
+      `,
+      backgroundSize: "200% 200%, 200% 200%",
+      filter: "blur(60px)",
+      opacity: 0.6,
+      animation: "aurora-flow-2 22s ease-in-out infinite",
+    }} />
   </>
 );
 
@@ -195,8 +247,100 @@ const MinimalBg = () => {
   );
 };
 
+interface CustomConfig {
+  color1: string; color2: string; color3: string;
+  style: "waves" | "particles" | "glow";
+}
+
+const CustomBg = ({ cfg }: { cfg: CustomConfig }) => {
+  const { color1, color2, color3, style } = cfg;
+  const particles = useMemo(() => Array.from({ length: 40 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    size: 6 + Math.random() * 16,
+    delay: Math.random() * 8,
+    duration: 10 + Math.random() * 12,
+    color: [color1, color2, color3][i % 3],
+  })), [color1, color2, color3]);
+
+  if (style === "waves") {
+    return (
+      <>
+        <style>{`
+          @keyframes custom-wave {
+            0%, 100% { background-position: 0% 50%, 100% 50%, 50% 0%; }
+            50%      { background-position: 100% 50%, 0% 50%, 50% 100%; }
+          }
+        `}</style>
+        <div style={{
+          position: "absolute", inset: "-20%",
+          background: `
+            radial-gradient(ellipse 60% 40% at 30% 30%, ${color1}88, transparent 60%),
+            radial-gradient(ellipse 60% 40% at 70% 70%, ${color2}88, transparent 60%),
+            radial-gradient(ellipse 60% 40% at 50% 90%, ${color3}88, transparent 60%)
+          `,
+          backgroundSize: "200% 200%, 200% 200%, 200% 200%",
+          filter: "blur(50px)",
+          opacity: 0.55,
+          animation: "custom-wave 20s ease-in-out infinite",
+        }} />
+      </>
+    );
+  }
+
+  if (style === "particles") {
+    return (
+      <>
+        <style>{`
+          @keyframes custom-float {
+            0%, 100% { transform: translate3d(0,0,0); opacity: 0.5; }
+            50%      { transform: translate3d(20px, -30px, 0); opacity: 0.9; }
+          }
+        `}</style>
+        {particles.map(p => (
+          <div key={p.id} style={{
+            position: "absolute", left: `${p.left}%`, top: `${p.top}%`,
+            width: p.size, height: p.size, borderRadius: "50%",
+            background: p.color, opacity: 0.6,
+            boxShadow: `0 0 ${p.size}px ${p.color}`,
+            filter: "blur(1px)",
+            animation: `custom-float ${p.duration}s ease-in-out ${p.delay}s infinite`,
+          }} />
+        ))}
+      </>
+    );
+  }
+
+  // glow
+  return (
+    <>
+      <style>{`
+        @keyframes custom-glow {
+          0%, 100% { transform: scale(1); opacity: 0.45; }
+          50%      { transform: scale(1.2); opacity: 0.75; }
+        }
+      `}</style>
+      {[
+        { c: color1, l: 20, t: 25, s: "60vw", d: 0 },
+        { c: color2, l: 65, t: 55, s: "55vw", d: 3 },
+        { c: color3, l: 40, t: 75, s: "50vw", d: 6 },
+      ].map((o, i) => (
+        <div key={i} style={{
+          position: "absolute", left: `${o.l}%`, top: `${o.t}%`,
+          width: o.s, height: o.s, borderRadius: "50%",
+          background: `radial-gradient(circle, ${o.c}, transparent 65%)`,
+          filter: "blur(40px)",
+          animation: `custom-glow ${10 + i * 2}s ease-in-out ${o.d}s infinite`,
+          transform: "translate(-50%, -50%)",
+        }} />
+      ))}
+    </>
+  );
+};
+
 const AiBackground = () => {
-  const { preset } = useBackground();
+  const { preset, customConfig } = useBackground();
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden"
@@ -208,6 +352,7 @@ const AiBackground = () => {
       {preset === "aurora" && <AuroraBg />}
       {preset === "matrix" && <MatrixBg />}
       {preset === "minimal" && <MinimalBg />}
+      {preset === "custom" && customConfig && <CustomBg cfg={customConfig} />}
     </div>
   );
 };
