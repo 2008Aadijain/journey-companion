@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
+import { checkBeforeSend } from "@/lib/moderation";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 50;
 
