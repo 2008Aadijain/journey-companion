@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
+import { checkBeforeSend } from "@/lib/moderation";
 
 interface MemberProfile {
   user_id: string;
@@ -83,6 +84,11 @@ const GroupChat = () => {
   const handleSend = async () => {
     if (!newMessage.trim() || !user || !profile) return;
     const content = newMessage.trim();
+    const blocked = checkBeforeSend(content);
+    if (blocked) {
+      toast({ title: blocked, variant: "destructive" });
+      return;
+    }
     setNewMessage("");
     await supabase.from("group_messages").insert({
       goal_category: category,

@@ -16,6 +16,7 @@ import AiKeyPopup from "@/components/AiKeyPopup";
 
 import ShareCard from "@/components/ShareCard";
 import { useToast } from "@/hooks/use-toast";
+import { checkBeforeSend } from "@/lib/moderation";
 import { useI18n } from "@/hooks/useI18n";
 import { getAiDailyTask, getAiVideos, youtubeSearchUrl, type AiVideo } from "@/lib/gemini";
 
@@ -402,6 +403,11 @@ const Dashboard = () => {
 
   const handleCheckin = async () => {
     if (!checkinText.trim() || wordCount < 6 || !user || !profile || todayCheckedIn) return;
+    const blocked = checkBeforeSend(checkinText.trim());
+    if (blocked) {
+      toast({ title: blocked, variant: "destructive" });
+      return;
+    }
 
     let photoUrl: string | null = null;
     if (checkinPhoto) {

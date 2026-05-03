@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
+import { checkBeforeSend } from "@/lib/moderation";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 50;
 
@@ -129,9 +131,13 @@ const DirectChat = () => {
   const handleSend = async () => {
     if (!newMessage.trim() || !user || !matchId) return;
     const content = newMessage.trim();
+    const blocked = checkBeforeSend(content);
+    if (blocked) {
+      toast.error(blocked);
+      return;
+    }
     setNewMessage("");
     typingChannelRef.current?.track({ typing: false });
-    // Optimistic add
     const tempId = `temp-${Date.now()}`;
     const optimistic: Tables<"direct_messages"> = {
       id: tempId, match_id: matchId, sender_id: user.id, content,
