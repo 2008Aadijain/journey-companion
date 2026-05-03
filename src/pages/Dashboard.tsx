@@ -13,7 +13,7 @@ import SettingsPanel from "@/components/SettingsPanel";
 import BottomNav from "@/components/BottomNav";
 import XpAnimation from "@/components/XpAnimation";
 import AiKeyPopup from "@/components/AiKeyPopup";
-import AiBackground from "@/components/AiBackground";
+
 import ShareCard from "@/components/ShareCard";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/hooks/useI18n";
@@ -458,7 +458,7 @@ const Dashboard = () => {
   };
 
   if (loading || !profile) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="text-5xl mb-4 animate-pulse">🎯</div>
         <p className="text-muted-foreground text-sm">Loading your journey...</p>
@@ -472,8 +472,7 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <AiBackground />
+    <div className="min-h-screen relative">
       <AiKeyPopup
         open={showAiPopup}
         onClose={() => setShowAiPopup(false)}

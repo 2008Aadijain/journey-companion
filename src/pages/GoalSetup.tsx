@@ -69,7 +69,7 @@ const GoalSetup = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-5xl animate-pulse">🎯</div>
       </div>
     );

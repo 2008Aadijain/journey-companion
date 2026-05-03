@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { I18nProvider } from "@/hooks/useI18n";
 import { BackgroundProvider } from "@/hooks/useBackground";
+import AiBackground from "@/components/AiBackground";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import GoalSetup from "./pages/GoalSetup.tsx";
@@ -33,6 +34,7 @@ const App = () => (
           <ThemeProvider>
           <I18nProvider>
           <BackgroundProvider>
+          <AiBackground />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />

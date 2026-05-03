@@ -107,13 +107,13 @@ const Profile = () => {
   const handleLogout = async () => { await signOut(); navigate("/"); };
 
   if (loading || !profile) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-4xl animate-pulse">👤</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {showConfetti && (
         <div className="fixed inset-0 z-50 pointer-events-none">
           {Array.from({ length: 50 }).map((_, i) => (

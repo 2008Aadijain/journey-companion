@@ -110,7 +110,7 @@ const GroupChat = () => {
   };
 
   if (loading || !profile) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="text-4xl mb-3 animate-pulse">💬</div>
         <p className="text-muted-foreground text-sm">Loading group chat...</p>
@@ -119,7 +119,7 @@ const GroupChat = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">

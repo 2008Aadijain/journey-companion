@@ -53,7 +53,7 @@ const PublicProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background px-4 py-6 max-w-lg mx-auto space-y-4">
+      <div className="min-h-screen px-4 py-6 max-w-lg mx-auto space-y-4">
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-48 w-full rounded-2xl" />
         <Skeleton className="h-32 w-full rounded-2xl" />
@@ -63,7 +63,7 @@ const PublicProfile = () => {
 
   if (notFound || !profile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
         <div className="text-6xl mb-4">🔍</div>
         <h2 className="text-xl font-bold text-foreground mb-2">Profile not found</h2>
         <p className="text-sm text-muted-foreground mb-6">This user doesn't exist on GoalCircle.</p>
@@ -79,7 +79,7 @@ const PublicProfile = () => {
   const lv = getLevelTitle(profile.xp ?? 0);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
           <button onClick={() => navigate(-1)} className="p-2 rounded-full glass-card">
