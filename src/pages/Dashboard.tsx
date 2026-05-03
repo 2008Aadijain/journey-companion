@@ -402,6 +402,11 @@ const Dashboard = () => {
 
   const handleCheckin = async () => {
     if (!checkinText.trim() || wordCount < 6 || !user || !profile || todayCheckedIn) return;
+    const blocked = checkBeforeSend(checkinText.trim());
+    if (blocked) {
+      toast({ title: blocked, variant: "destructive" });
+      return;
+    }
 
     let photoUrl: string | null = null;
     if (checkinPhoto) {
