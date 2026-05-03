@@ -75,13 +75,13 @@ const Leaderboard = () => {
   const meInTop10 = user ? top10.some(e => e.user_id === user.id) : false;
 
   if (loading) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-4xl animate-pulse">🏆</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
           <button onClick={() => navigate("/dashboard")} className="p-2 rounded-full glass-card">

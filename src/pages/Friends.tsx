@@ -226,13 +226,13 @@ const Friends = () => {
         style={{ background: 'hsla(258, 80%, 50%, 0.2)' }}>{u.name.charAt(0).toUpperCase()}</div>;
 
   if (loading || !profile) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-4xl animate-pulse">👥</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen pb-24">
       <XpAnimation amount={xpGain} show={showXp} onDone={() => setShowXp(false)} />
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">

@@ -458,7 +458,7 @@ const Dashboard = () => {
   };
 
   if (loading || !profile) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="text-5xl mb-4 animate-pulse">🎯</div>
         <p className="text-muted-foreground text-sm">Loading your journey...</p>
@@ -472,7 +472,7 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen relative">
       <AiBackground />
       <AiKeyPopup
         open={showAiPopup}

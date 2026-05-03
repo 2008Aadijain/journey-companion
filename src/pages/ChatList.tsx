@@ -140,13 +140,13 @@ const ChatList = () => {
   };
 
   if (loading || !profile) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-4xl animate-pulse">💬</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen pb-24">
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50 bg-background/80">
         <div className="px-4 py-3 max-w-lg mx-auto">
           <h1 className="text-xl font-black text-gradient-hero tracking-tight">{t("chat")}</h1>
