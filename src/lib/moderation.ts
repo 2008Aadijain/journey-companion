@@ -166,6 +166,6 @@ export const checkBeforeSend = (text: string): string | null => {
   const m = isMuted();
   if (m.muted) return `🚫 You're muted for ${m.minutesLeft} more minute${m.minutesLeft === 1 ? "" : "s"}.`;
   const result = moderateMessage(text);
-  if (result.ok) return null;
+  if (result.ok === true) return null;
   return recordViolation(result.error);
 };
