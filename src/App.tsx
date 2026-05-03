@@ -34,6 +34,7 @@ const App = () => (
           <ThemeProvider>
           <I18nProvider>
           <BackgroundProvider>
+          <AiBackground />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
