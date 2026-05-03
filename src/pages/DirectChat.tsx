@@ -133,7 +133,7 @@ const DirectChat = () => {
     const content = newMessage.trim();
     const blocked = checkBeforeSend(content);
     if (blocked) {
-      toast({ title: blocked, variant: "destructive" });
+      toast.error(blocked);
       return;
     }
     setNewMessage("");
