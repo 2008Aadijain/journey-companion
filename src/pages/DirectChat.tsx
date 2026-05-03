@@ -129,9 +129,13 @@ const DirectChat = () => {
   const handleSend = async () => {
     if (!newMessage.trim() || !user || !matchId) return;
     const content = newMessage.trim();
+    const blocked = checkBeforeSend(content);
+    if (blocked) {
+      toast({ title: blocked, variant: "destructive" });
+      return;
+    }
     setNewMessage("");
     typingChannelRef.current?.track({ typing: false });
-    // Optimistic add
     const tempId = `temp-${Date.now()}`;
     const optimistic: Tables<"direct_messages"> = {
       id: tempId, match_id: matchId, sender_id: user.id, content,
