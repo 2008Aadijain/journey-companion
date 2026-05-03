@@ -473,7 +473,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen relative">
-      <AiBackground />
       <AiKeyPopup
         open={showAiPopup}
         onClose={() => setShowAiPopup(false)}
