@@ -84,6 +84,11 @@ const GroupChat = () => {
   const handleSend = async () => {
     if (!newMessage.trim() || !user || !profile) return;
     const content = newMessage.trim();
+    const blocked = checkBeforeSend(content);
+    if (blocked) {
+      toast({ title: blocked, variant: "destructive" });
+      return;
+    }
     setNewMessage("");
     await supabase.from("group_messages").insert({
       goal_category: category,
