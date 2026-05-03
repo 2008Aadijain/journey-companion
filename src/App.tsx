@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { I18nProvider } from "@/hooks/useI18n";
 import { BackgroundProvider } from "@/hooks/useBackground";
 import AiBackground from "@/components/AiBackground";
+import FloatingCustomizeButton from "@/components/FloatingCustomizeButton";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import GoalSetup from "./pages/GoalSetup.tsx";
@@ -35,6 +36,7 @@ const App = () => (
           <I18nProvider>
           <BackgroundProvider>
           <AiBackground />
+          <FloatingCustomizeButton />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />

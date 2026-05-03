@@ -16,6 +16,7 @@ const ACCENT_HSL: Record<string, string> = {
   blue: "220 100% 55%",
   green: "145 70% 45%",
   orange: "25 100% 55%",
+  pink: "330 90% 60%",
 };
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -94,7 +95,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const hsl = ACCENT_HSL[accentColor] || ACCENT_HSL.purple;
     const root = document.documentElement;
     root.style.setProperty("--primary", hsl);
-    root.style.setProperty("--accent", hsl.replace(/62%|55%|45%/, "50%"));
+    root.style.setProperty("--accent", hsl.replace(/62%|55%|45%|60%/, "50%"));
     root.style.setProperty("--ring", hsl);
   }, [accentColor]);
 
