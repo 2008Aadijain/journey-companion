@@ -18,7 +18,7 @@ import ShareCard from "@/components/ShareCard";
 import { useToast } from "@/hooks/use-toast";
 import { checkBeforeSend } from "@/lib/moderation";
 import { useI18n } from "@/hooks/useI18n";
-import { getAiDailyTask, getAiVideos, youtubeSearchUrl, type AiVideo } from "@/lib/gemini";
+import { getAiDailyBundle, youtubeSearchUrl, type AiVideo } from "@/lib/gemini";
 
 const SMART_NUDGES: Record<string, string[]> = {
   Learning: [
@@ -128,18 +128,18 @@ const Dashboard = () => {
     const goalLabel = profile.goal_label;
     setAiTaskLoading(true);
     setAiVideosLoading(true);
-    getAiDailyTask(goalLabel, profile.goal_category, day)
-      .then(taskText => {
+    getAiDailyBundle(goalLabel, profile.goal_category, day)
+      .then(bundle => {
         if (cancelled) return;
-        setAiTask(taskText);
-        // Now generate videos specifically for THIS task
-        getAiVideos(goalLabel, day, taskText)
-          .then(v => { if (!cancelled) setAiVideos(v); })
-          .catch(() => {})
-          .finally(() => { if (!cancelled) setAiVideosLoading(false); });
+        setAiTask(bundle.taskDescription ? `${bundle.task} — ${bundle.taskDescription}` : bundle.task);
+        setAiVideos(bundle.videos);
       })
-      .catch(() => { if (!cancelled) setAiVideosLoading(false); })
-      .finally(() => { if (!cancelled) setAiTaskLoading(false); });
+      .catch(() => { /* fallback rendered silently */ })
+      .finally(() => {
+        if (cancelled) return;
+        setAiTaskLoading(false);
+        setAiVideosLoading(false);
+      });
     return () => { cancelled = true; };
   }, [aiActivated, profile]);
 
@@ -823,12 +823,9 @@ const Dashboard = () => {
                   <a key={i} href={video.url} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-muted/30 active:scale-[0.98]"
                     style={{ border: '1px solid hsla(258, 40%, 30%, 0.3)' }}>
-                    <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted/30 flex items-center justify-center relative">
-                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <Play className="w-5 h-5 text-white fill-white" />
-                      </div>
+                    <div className="w-20 h-14 rounded-lg flex-shrink-0 flex items-center justify-center relative"
+                      style={{ background: 'linear-gradient(135deg, hsl(0 85% 50%), hsl(0 85% 35%))' }}>
+                      <Play className="w-5 h-5 text-white fill-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-foreground line-clamp-2">{video.title}</p>

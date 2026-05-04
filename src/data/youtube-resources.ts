@@ -1,58 +1,57 @@
 export interface VideoResource {
   title: string;
-  thumbnail: string;
   url: string;
+  thumbnail?: string;
 }
 
-const thumb = (id: string) => `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-const watch = (id: string) => `https://www.youtube.com/watch?v=${id}`;
-const v = (title: string, id: string): VideoResource => ({ title, thumbnail: thumb(id), url: watch(id) });
+const search = (q: string) =>
+  `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
+const v = (title: string, query: string): VideoResource => ({ title, url: search(query) });
 
-// Keyed by goal_label (matches what's stored in profile.goal_label)
+// Curated fallback search URLs (no per-video API call). Keyed by goal_label.
 const VIDEOS_BY_GOAL: Record<string, VideoResource[]> = {
-  "Learn Figma": [
-    v("Figma Tutorial Hindi", "II-6dDzc-80"),
-    v("UI Design Beginners", "_K06Dni-RE4"),
-    v("Figma Complete Course", "HZuk6Wkx_Eg"),
+  "Start Business": [
+    v("Business Ideas Hindi", "business ideas hindi 2024"),
+    v("Startup Tips Hindi", "startup tips hindi"),
+    v("Marketing Hindi", "digital marketing hindi"),
   ],
   "Learn Python": [
-    v("Python Hindi Tutorial", "UrsmFxEIp5k"),
-    v("Python for Beginners", "_uQrJ0TkZlc"),
-    v("Python Projects", "8ext9G7xspg"),
+    v("Python Hindi Tutorial", "python tutorial hindi 2024"),
+    v("Python Projects Hindi", "python projects hindi"),
+    v("Python Tips Hindi", "python tips hindi"),
+  ],
+  "Learn Figma": [
+    v("Figma Tutorial Hindi", "figma tutorial hindi 2024"),
+    v("UI Design Hindi", "ui ux design hindi"),
+    v("Figma Tips Hindi", "figma tips hindi"),
   ],
   "Learn Coding": [
-    v("Web Dev Hindi", "tVzUXW6siu0"),
-    v("HTML CSS Hindi", "BsDoLVMnmZs"),
-    v("JavaScript Hindi", "hKB-YGF14SY"),
+    v("Web Dev Hindi", "web development hindi 2024"),
+    v("HTML CSS Hindi", "html css hindi"),
+    v("JavaScript Hindi", "javascript hindi beginners"),
   ],
   "Lose Weight": [
-    v("Home Workout Hindi", "UItWltVZZmE"),
-    v("Weight Loss Tips", "8Sm0sKwCwRs"),
-    v("Yoga for Beginners", "v7AYKMP6rOE"),
-  ],
-  "Start Business": [
-    v("Business Ideas Hindi", "ZpzNzjMOJtY"),
-    v("Startup Tips Hindi", "9pobMYmCGzQ"),
-    v("Marketing Tips", "oBYzH2bJSbg"),
+    v("Home Workout Hindi", "home workout hindi"),
+    v("Weight Loss Hindi", "weight loss tips hindi"),
+    v("Yoga Hindi", "yoga beginners hindi"),
   ],
   "Improve English": [
-    v("Spoken English Hindi", "_9WTPF-J3mY"),
-    v("English Speaking", "53bVMMLiLDY"),
-    v("English Grammar", "9o5zAMEHCYQ"),
+    v("Spoken English Hindi", "spoken english hindi"),
+    v("English Speaking", "english speaking hindi"),
+    v("English Grammar", "english grammar hindi"),
   ],
   "Get a Job": [
-    v("Resume Kaise Banaye", "y8YH0Qbu5h4"),
-    v("Interview Tips Hindi", "HG68Ymazo18"),
-    v("Job Search Tips", "BVPiAMWABu8"),
+    v("Resume Kaise Banaye", "resume kaise banaye hindi"),
+    v("Interview Tips Hindi", "interview tips hindi"),
+    v("Job Search Hindi", "job search tips hindi"),
   ],
   "Build Reading Habit": [
-    v("Reading Habit Hindi", "YQOrqAKKcUQ"),
-    v("Book Summary Hindi", "7bB_KgjCa_A"),
-    v("Speed Reading Tips", "ZwEquW_Yij0"),
+    v("Reading Habit Hindi", "reading habit hindi"),
+    v("Book Summary Hindi", "book summary hindi"),
+    v("Speed Reading Hindi", "speed reading hindi"),
   ],
 };
 
-// Fallback by category for older/custom goals
 const VIDEOS_BY_CATEGORY: Record<string, VideoResource[]> = {
   Creative: VIDEOS_BY_GOAL["Learn Figma"],
   Learning: VIDEOS_BY_GOAL["Learn Python"],
