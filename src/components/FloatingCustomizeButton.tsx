@@ -87,64 +87,80 @@ const FloatingCustomizeButton = () => {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [generating, setGenerating] = useState(false);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+
+  // Cooldown timer
+  useEffect(() => {
+    const lastUsed = parseInt(localStorage.getItem("gm-custombg-last") || "0", 10);
+    const tick = () => {
+      const left = Math.max(0, COOLDOWN_MS - (Date.now() - lastUsed));
+      setCooldownLeft(Math.ceil(left / 1000));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [generating]);
+
+  const callGeminiForColors = async (base64: string, mime: string): Promise<{ c1: string; c2: string; c3: string } | null> => {
+    const key = localStorage.getItem("gm-gemini-key");
+    if (!key) return null;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+    const prompt = `3 dominant colors in image? Return only JSON: {"c1":"#RRGGBB","c2":"#RRGGBB","c3":"#RRGGBB"}`;
+    const doFetch = () => fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [
+          { text: prompt },
+          { inline_data: { mime_type: mime, data: base64 } },
+        ] }],
+        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 80 },
+      }),
+    });
+    let res = await doFetch();
+    if (res.status === 429) {
+      await new Promise(r => setTimeout(r, 5000));
+      res = await doFetch();
+    }
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    try {
+      const parsed = JSON.parse(text.replace(/^```json\s*|\s*```$/g, "").trim());
+      return { c1: parsed.c1 || parsed.color1, c2: parsed.c2 || parsed.color2, c3: parsed.c3 || parsed.color3 };
+    } catch { return null; }
+  };
 
   const handleCustomImage = async (file: File) => {
+    if (cooldownLeft > 0) {
+      toast({ title: `Available in ${cooldownLeft}s...` });
+      return;
+    }
     setGenerating(true);
     try {
-      const dataUrl = await fileToDataUrl(file);
-      const base64 = dataUrl.split(",")[1];
-      const mime = file.type || "image/jpeg";
+      const { base64, dataUrl, thumb } = await compressImage(file);
 
-      // Gemini call with inline image
-      const key = localStorage.getItem("gm-gemini-key");
-      if (!key) throw new Error("No Gemini API key");
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
-      const prompt = `Analyze this image. Extract the 3 most dominant colors as hex codes.
-Return ONLY this JSON (no markdown, no code fences):
-{"color1":"#RRGGBB","color2":"#RRGGBB","color3":"#RRGGBB","style":"waves|particles|glow","mood":"calm|energetic|dark|bright"}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [
-            { text: prompt },
-            { inline_data: { mime_type: mime, data: base64 } },
-          ] }],
-          generationConfig: { responseMimeType: "application/json" },
-        }),
-      });
-      if (!res.ok) throw new Error(`Gemini error ${res.status}`);
-      const data = await res.json();
-      const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const cleaned = text.replace(/^```json\s*|\s*```$/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-
-      // Make a tiny thumbnail
-      const thumb = await new Promise<string>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          const c = document.createElement("canvas");
-          c.width = 80; c.height = 80;
-          const ctx = c.getContext("2d")!;
-          ctx.drawImage(img, 0, 0, 80, 80);
-          resolve(c.toDataURL("image/jpeg", 0.7));
-        };
-        img.src = dataUrl;
-      });
+      let c1 = "", c2 = "", c3 = "";
+      const ai = await callGeminiForColors(base64, "image/jpeg").catch(() => null);
+      if (ai && ai.c1 && ai.c2 && ai.c3) {
+        c1 = ai.c1; c2 = ai.c2; c3 = ai.c3;
+      } else {
+        const fallback = await extractColorsFromCanvas(dataUrl);
+        c1 = fallback[0]; c2 = fallback[1]; c3 = fallback[2];
+      }
 
       const cfg: CustomBgConfig = {
-        color1: parsed.color1 || "#7B2FBE",
-        color2: parsed.color2 || "#00BFFF",
-        color3: parsed.color3 || "#FF6B9D",
-        style: ["waves", "particles", "glow"].includes(parsed.style) ? parsed.style : "waves",
+        color1: c1, color2: c2, color3: c3,
+        style: "waves",
         imagePreview: thumb,
       };
       setCustomConfig(cfg);
       setPreset("custom", true);
-      toast({ title: "Custom AI background applied! ✨" });
+      localStorage.setItem("gm-custombg-last", String(Date.now()));
+      toast({ title: "Theme created! 🎨" });
     } catch (e) {
       console.error(e);
-      toast({ title: "Failed to generate background", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+      toast({ title: "Couldn't process image. Try another.", variant: "destructive" });
     } finally {
       setGenerating(false);
     }
