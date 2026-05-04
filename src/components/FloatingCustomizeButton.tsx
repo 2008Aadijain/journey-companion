@@ -241,16 +241,21 @@ const FloatingCustomizeButton = () => {
                   })}
                   {/* Custom AI option */}
                   <button
-                    disabled={!aiActive || generating}
+                    disabled={!aiActive || generating || cooldownLeft > 0}
                     onClick={() => fileRef.current?.click()}
                     className={`px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all col-span-2 ${
                       preset === "custom"
                         ? "bg-primary/20 border border-primary/50 text-foreground"
                         : "glass-card text-muted-foreground"
-                    } ${!aiActive ? "opacity-60" : ""}`}>
+                    } ${!aiActive || cooldownLeft > 0 ? "opacity-60" : ""}`}>
                     {generating ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" /> AI is creating your unique background...
+                      </span>
+                    ) : cooldownLeft > 0 ? (
+                      <span className="flex items-center gap-2">
+                        <span className="text-base">⏳</span>
+                        <span className="flex-1">Available in {cooldownLeft}s...</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
