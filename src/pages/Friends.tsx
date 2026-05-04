@@ -531,13 +531,14 @@ const Friends = () => {
                     style={{ background: 'hsla(258, 80%, 50%, 0.15)' }}>
                     <Users className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-foreground">{g.name}</p>
-                    <p className="text-xs text-muted-foreground">Code: {g.invite_code}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{g.name}</p>
+                    <p className="text-xs text-muted-foreground">{g.member_count ?? 1} member{(g.member_count ?? 1) === 1 ? '' : 's'}</p>
                   </div>
                   <button onClick={() => navigate(`/group-chat?group=${g.id}`)}
-                    className="p-2 rounded-full" style={{ background: 'hsla(258, 80%, 50%, 0.15)' }}>
-                    <MessageCircle className="w-4 h-4 text-primary" />
+                    className="px-3 py-1.5 rounded-full text-xs font-bold text-primary-foreground flex items-center gap-1"
+                    style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                    <MessageCircle className="w-3.5 h-3.5" /> Open Chat
                   </button>
                 </div>
               </div>
