@@ -1,10 +1,68 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Sparkles, Moon, Sun, Palette, Type, Image as ImageIcon, Bot, Lock, Loader2, Trash2 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useBackground, BG_PRESETS, type BgPreset, type CustomBgConfig } from "@/hooks/useBackground";
 import { isAiActive, callGemini } from "@/lib/gemini";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+
+const COOLDOWN_MS = 60_000;
+
+// Compress to 256x256 JPEG q=0.5 and return base64 (no prefix)
+const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; thumb: string }> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = 256; c.height = 256;
+        const ctx = c.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas unavailable"));
+        ctx.drawImage(img, 0, 0, 256, 256);
+        const dataUrl = c.toDataURL("image/jpeg", 0.5);
+        const tc = document.createElement("canvas");
+        tc.width = 80; tc.height = 80;
+        tc.getContext("2d")!.drawImage(img, 0, 0, 80, 80);
+        const thumb = tc.toDataURL("image/jpeg", 0.7);
+        resolve({ base64: dataUrl.split(",")[1], dataUrl, thumb });
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+// Canvas-based dominant color extraction (3 colors via simple bucketing)
+const extractColorsFromCanvas = (dataUrl: string): Promise<[string, string, string]> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas unavailable"));
+      ctx.drawImage(img, 0, 0, 64, 64);
+      const data = ctx.getImageData(0, 0, 64, 64).data;
+      const buckets = new Map<string, { r: number; g: number; b: number; n: number }>();
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const key = `${r >> 5}-${g >> 5}-${b >> 5}`;
+        const e = buckets.get(key);
+        if (e) { e.r += r; e.g += g; e.b += b; e.n++; }
+        else buckets.set(key, { r, g, b, n: 1 });
+      }
+      const sorted = Array.from(buckets.values()).sort((a, b) => b.n - a.n).slice(0, 3);
+      while (sorted.length < 3) sorted.push(sorted[0] || { r: 123, g: 47, b: 190, n: 1 });
+      const hex = (v: number) => v.toString(16).padStart(2, "0");
+      const toHex = (e: { r: number; g: number; b: number; n: number }) =>
+        `#${hex(Math.round(e.r / e.n))}${hex(Math.round(e.g / e.n))}${hex(Math.round(e.b / e.n))}`;
+      resolve([toHex(sorted[0]), toHex(sorted[1]), toHex(sorted[2])]);
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
 
 const ACCENT_COLORS = [
   { name: "Purple", value: "purple", hsl: "258 100% 62%" },
@@ -20,12 +78,6 @@ const FONT_SIZES = [
   { label: "Large", value: "large" },
 ];
 
-const fileToDataUrl = (file: File): Promise<string> => new Promise((res, rej) => {
-  const r = new FileReader();
-  r.onload = () => res(r.result as string);
-  r.onerror = rej;
-  r.readAsDataURL(file);
-});
 
 const FloatingCustomizeButton = () => {
   const [open, setOpen] = useState(false);
