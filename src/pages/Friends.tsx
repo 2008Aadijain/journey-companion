@@ -157,7 +157,10 @@ const Friends = () => {
       setXpGain(5);
       setShowXp(true);
     }
-    toast({ title: "You're now friends! 🎉" });
+    const reqRow = friendRequests.find(r => r.id === requestId);
+    const otherId = reqRow ? (reqRow.sender_id === user?.id ? reqRow.receiver_id : reqRow.sender_id) : null;
+    const otherName = otherId ? requestProfiles[otherId]?.name : null;
+    toast({ title: `You and ${otherName || "your friend"} are now friends! 🎉` });
     loadData();
   };
 
