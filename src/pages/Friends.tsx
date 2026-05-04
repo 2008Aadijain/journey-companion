@@ -33,6 +33,7 @@ interface FriendGroup {
   name: string;
   invite_code: string;
   created_by: string;
+  member_count?: number;
 }
 
 const Friends = () => {
