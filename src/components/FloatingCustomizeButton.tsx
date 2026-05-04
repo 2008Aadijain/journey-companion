@@ -1,10 +1,68 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Sparkles, Moon, Sun, Palette, Type, Image as ImageIcon, Bot, Lock, Loader2, Trash2 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useBackground, BG_PRESETS, type BgPreset, type CustomBgConfig } from "@/hooks/useBackground";
 import { isAiActive, callGemini } from "@/lib/gemini";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+
+const COOLDOWN_MS = 60_000;
+
+// Compress to 256x256 JPEG q=0.5 and return base64 (no prefix)
+const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; thumb: string }> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = 256; c.height = 256;
+        const ctx = c.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas unavailable"));
+        ctx.drawImage(img, 0, 0, 256, 256);
+        const dataUrl = c.toDataURL("image/jpeg", 0.5);
+        const tc = document.createElement("canvas");
+        tc.width = 80; tc.height = 80;
+        tc.getContext("2d")!.drawImage(img, 0, 0, 80, 80);
+        const thumb = tc.toDataURL("image/jpeg", 0.7);
+        resolve({ base64: dataUrl.split(",")[1], dataUrl, thumb });
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+// Canvas-based dominant color extraction (3 colors via simple bucketing)
+const extractColorsFromCanvas = (dataUrl: string): Promise<[string, string, string]> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas unavailable"));
+      ctx.drawImage(img, 0, 0, 64, 64);
+      const data = ctx.getImageData(0, 0, 64, 64).data;
+      const buckets = new Map<string, { r: number; g: number; b: number; n: number }>();
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const key = `${r >> 5}-${g >> 5}-${b >> 5}`;
+        const e = buckets.get(key);
+        if (e) { e.r += r; e.g += g; e.b += b; e.n++; }
+        else buckets.set(key, { r, g, b, n: 1 });
+      }
+      const sorted = Array.from(buckets.values()).sort((a, b) => b.n - a.n).slice(0, 3);
+      while (sorted.length < 3) sorted.push(sorted[0] || { r: 123, g: 47, b: 190, n: 1 });
+      const hex = (v: number) => v.toString(16).padStart(2, "0");
+      const toHex = (e: { r: number; g: number; b: number; n: number }) =>
+        `#${hex(Math.round(e.r / e.n))}${hex(Math.round(e.g / e.n))}${hex(Math.round(e.b / e.n))}`;
+      resolve([toHex(sorted[0]), toHex(sorted[1]), toHex(sorted[2])]);
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
 
 const ACCENT_COLORS = [
   { name: "Purple", value: "purple", hsl: "258 100% 62%" },
@@ -20,12 +78,6 @@ const FONT_SIZES = [
   { label: "Large", value: "large" },
 ];
 
-const fileToDataUrl = (file: File): Promise<string> => new Promise((res, rej) => {
-  const r = new FileReader();
-  r.onload = () => res(r.result as string);
-  r.onerror = rej;
-  r.readAsDataURL(file);
-});
 
 const FloatingCustomizeButton = () => {
   const [open, setOpen] = useState(false);
@@ -35,64 +87,80 @@ const FloatingCustomizeButton = () => {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [generating, setGenerating] = useState(false);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+
+  // Cooldown timer
+  useEffect(() => {
+    const lastUsed = parseInt(localStorage.getItem("gm-custombg-last") || "0", 10);
+    const tick = () => {
+      const left = Math.max(0, COOLDOWN_MS - (Date.now() - lastUsed));
+      setCooldownLeft(Math.ceil(left / 1000));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [generating]);
+
+  const callGeminiForColors = async (base64: string, mime: string): Promise<{ c1: string; c2: string; c3: string } | null> => {
+    const key = localStorage.getItem("gm-gemini-key");
+    if (!key) return null;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+    const prompt = `3 dominant colors in image? Return only JSON: {"c1":"#RRGGBB","c2":"#RRGGBB","c3":"#RRGGBB"}`;
+    const doFetch = () => fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [
+          { text: prompt },
+          { inline_data: { mime_type: mime, data: base64 } },
+        ] }],
+        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 80 },
+      }),
+    });
+    let res = await doFetch();
+    if (res.status === 429) {
+      await new Promise(r => setTimeout(r, 5000));
+      res = await doFetch();
+    }
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    try {
+      const parsed = JSON.parse(text.replace(/^```json\s*|\s*```$/g, "").trim());
+      return { c1: parsed.c1 || parsed.color1, c2: parsed.c2 || parsed.color2, c3: parsed.c3 || parsed.color3 };
+    } catch { return null; }
+  };
 
   const handleCustomImage = async (file: File) => {
+    if (cooldownLeft > 0) {
+      toast({ title: `Available in ${cooldownLeft}s...` });
+      return;
+    }
     setGenerating(true);
     try {
-      const dataUrl = await fileToDataUrl(file);
-      const base64 = dataUrl.split(",")[1];
-      const mime = file.type || "image/jpeg";
+      const { base64, dataUrl, thumb } = await compressImage(file);
 
-      // Gemini call with inline image
-      const key = localStorage.getItem("gm-gemini-key");
-      if (!key) throw new Error("No Gemini API key");
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
-      const prompt = `Analyze this image. Extract the 3 most dominant colors as hex codes.
-Return ONLY this JSON (no markdown, no code fences):
-{"color1":"#RRGGBB","color2":"#RRGGBB","color3":"#RRGGBB","style":"waves|particles|glow","mood":"calm|energetic|dark|bright"}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [
-            { text: prompt },
-            { inline_data: { mime_type: mime, data: base64 } },
-          ] }],
-          generationConfig: { responseMimeType: "application/json" },
-        }),
-      });
-      if (!res.ok) throw new Error(`Gemini error ${res.status}`);
-      const data = await res.json();
-      const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const cleaned = text.replace(/^```json\s*|\s*```$/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-
-      // Make a tiny thumbnail
-      const thumb = await new Promise<string>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          const c = document.createElement("canvas");
-          c.width = 80; c.height = 80;
-          const ctx = c.getContext("2d")!;
-          ctx.drawImage(img, 0, 0, 80, 80);
-          resolve(c.toDataURL("image/jpeg", 0.7));
-        };
-        img.src = dataUrl;
-      });
+      let c1 = "", c2 = "", c3 = "";
+      const ai = await callGeminiForColors(base64, "image/jpeg").catch(() => null);
+      if (ai && ai.c1 && ai.c2 && ai.c3) {
+        c1 = ai.c1; c2 = ai.c2; c3 = ai.c3;
+      } else {
+        const fallback = await extractColorsFromCanvas(dataUrl);
+        c1 = fallback[0]; c2 = fallback[1]; c3 = fallback[2];
+      }
 
       const cfg: CustomBgConfig = {
-        color1: parsed.color1 || "#7B2FBE",
-        color2: parsed.color2 || "#00BFFF",
-        color3: parsed.color3 || "#FF6B9D",
-        style: ["waves", "particles", "glow"].includes(parsed.style) ? parsed.style : "waves",
+        color1: c1, color2: c2, color3: c3,
+        style: "waves",
         imagePreview: thumb,
       };
       setCustomConfig(cfg);
       setPreset("custom", true);
-      toast({ title: "Custom AI background applied! ✨" });
+      localStorage.setItem("gm-custombg-last", String(Date.now()));
+      toast({ title: "Theme created! 🎨" });
     } catch (e) {
       console.error(e);
-      toast({ title: "Failed to generate background", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+      toast({ title: "Couldn't process image. Try another.", variant: "destructive" });
     } finally {
       setGenerating(false);
     }
@@ -173,16 +241,21 @@ Return ONLY this JSON (no markdown, no code fences):
                   })}
                   {/* Custom AI option */}
                   <button
-                    disabled={!aiActive || generating}
+                    disabled={!aiActive || generating || cooldownLeft > 0}
                     onClick={() => fileRef.current?.click()}
                     className={`px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all col-span-2 ${
                       preset === "custom"
                         ? "bg-primary/20 border border-primary/50 text-foreground"
                         : "glass-card text-muted-foreground"
-                    } ${!aiActive ? "opacity-60" : ""}`}>
+                    } ${!aiActive || cooldownLeft > 0 ? "opacity-60" : ""}`}>
                     {generating ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" /> AI is creating your unique background...
+                      </span>
+                    ) : cooldownLeft > 0 ? (
+                      <span className="flex items-center gap-2">
+                        <span className="text-base">⏳</span>
+                        <span className="flex-1">Available in {cooldownLeft}s...</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">

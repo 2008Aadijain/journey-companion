@@ -33,6 +33,7 @@ interface FriendGroup {
   name: string;
   invite_code: string;
   created_by: string;
+  member_count?: number;
 }
 
 const Friends = () => {
@@ -103,9 +104,27 @@ const Friends = () => {
       setRequestProfiles({});
     }
 
-    // Load groups
-    const { data: grps } = await supabase.from("friend_groups").select("*");
-    if (grps) setGroups(grps);
+    // Load groups (only ones the user is a member of) with member counts
+    const { data: myMemberships } = await supabase
+      .from("friend_group_members")
+      .select("group_id")
+      .eq("user_id", user.id);
+    const groupIds = (myMemberships || []).map(m => m.group_id);
+    if (groupIds.length > 0) {
+      const { data: grps } = await supabase
+        .from("friend_groups")
+        .select("*")
+        .in("id", groupIds);
+      const { data: allMembers } = await supabase
+        .from("friend_group_members")
+        .select("group_id")
+        .in("group_id", groupIds);
+      const counts: Record<string, number> = {};
+      (allMembers || []).forEach(m => { counts[m.group_id] = (counts[m.group_id] || 0) + 1; });
+      if (grps) setGroups(grps.map(g => ({ ...g, member_count: counts[g.id] || 1 })));
+    } else {
+      setGroups([]);
+    }
   };
 
   const searchUsers = async (query: string) => {
@@ -138,7 +157,10 @@ const Friends = () => {
       setXpGain(5);
       setShowXp(true);
     }
-    toast({ title: "You're now friends! 🎉" });
+    const reqRow = friendRequests.find(r => r.id === requestId);
+    const otherId = reqRow ? (reqRow.sender_id === user?.id ? reqRow.receiver_id : reqRow.sender_id) : null;
+    const otherName = otherId ? requestProfiles[otherId]?.name : null;
+    toast({ title: `You and ${otherName || "your friend"} are now friends! 🎉` });
     loadData();
   };
 
@@ -196,23 +218,36 @@ const Friends = () => {
   };
 
   const createGroup = async () => {
-    if (!groupName.trim() || !user) return;
-    const { data: group } = await supabase
-      .from("friend_groups")
-      .insert({ name: groupName, created_by: user.id })
-      .select()
-      .single();
-    if (group) {
-      // Add self
-      await supabase.from("friend_group_members").insert({ group_id: group.id, user_id: user.id });
-      // Add selected friends
-      for (const fId of selectedFriends) {
-        await supabase.from("friend_group_members").insert({ group_id: group.id, user_id: fId });
-      }
+    if (!user) return;
+    if (!groupName.trim()) {
+      toast({ title: "Please enter group name", variant: "destructive" });
+      return;
+    }
+    if (selectedFriends.length === 0) {
+      toast({ title: "Select at least one friend", variant: "destructive" });
+      return;
+    }
+    try {
+      const { data: group, error: gErr } = await supabase
+        .from("friend_groups")
+        .insert({ name: groupName.trim(), created_by: user.id })
+        .select()
+        .single();
+      if (gErr || !group) throw gErr || new Error("Group not created");
+
+      const members = [user.id, ...selectedFriends].map(uid => ({ group_id: group.id, user_id: uid }));
+      const { error: mErr } = await supabase.from("friend_group_members").insert(members);
+      if (mErr) throw mErr;
+
+      toast({ title: "Group created! 🎉" });
       setShowCreateGroup(false);
       setGroupName("");
       setSelectedFriends([]);
-      loadData();
+      setTab("groups");
+      await loadData();
+    } catch (e) {
+      console.error("createGroup failed:", e);
+      toast({ title: "Something went wrong. Try again!", variant: "destructive" });
     }
   };
 
@@ -344,8 +379,8 @@ const Friends = () => {
                 </div>
               </>
             )}
-            <button onClick={createGroup} disabled={!groupName.trim()}
-              className="w-full py-2.5 rounded-full text-sm font-bold text-primary-foreground disabled:opacity-40"
+            <button onClick={createGroup}
+              className="w-full py-2.5 rounded-full text-sm font-bold text-primary-foreground"
               style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
               Create Group
             </button>
@@ -496,13 +531,14 @@ const Friends = () => {
                     style={{ background: 'hsla(258, 80%, 50%, 0.15)' }}>
                     <Users className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-foreground">{g.name}</p>
-                    <p className="text-xs text-muted-foreground">Code: {g.invite_code}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{g.name}</p>
+                    <p className="text-xs text-muted-foreground">{g.member_count ?? 1} member{(g.member_count ?? 1) === 1 ? '' : 's'}</p>
                   </div>
                   <button onClick={() => navigate(`/group-chat?group=${g.id}`)}
-                    className="p-2 rounded-full" style={{ background: 'hsla(258, 80%, 50%, 0.15)' }}>
-                    <MessageCircle className="w-4 h-4 text-primary" />
+                    className="px-3 py-1.5 rounded-full text-xs font-bold text-primary-foreground flex items-center gap-1"
+                    style={{ background: 'linear-gradient(135deg, hsl(258 100% 62%), hsl(280 100% 55%))' }}>
+                    <MessageCircle className="w-3.5 h-3.5" /> Open Chat
                   </button>
                 </div>
               </div>

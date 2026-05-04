@@ -5,60 +5,49 @@ import { useMemo } from "react";
 import { useBackground } from "@/hooks/useBackground";
 
 const ElectricBg = () => {
-  // Generate randomized lightning bolts that flash on screen
-  const bolts = useMemo(() => Array.from({ length: 14 }).map((_, i) => {
-    const isCyan = i % 2 === 0;
-    const startX = Math.random() * 100;
-    const startY = Math.random() * 100;
-    const angle = (Math.random() * 60 - 30) + (Math.random() < 0.5 ? 90 : 0); // mix of horizontal & diagonal
-    const length = 25 + Math.random() * 50;
-    return {
-      id: i,
-      left: startX,
-      top: startY,
-      length,
-      angle,
-      color: isCyan ? "#00FFFF" : "#9B59B6",
-      delay: Math.random() * 8,
-      duration: 0.15 + Math.random() * 0.25,
-      cycle: 4 + Math.random() * 6,
-    };
-  }), []);
+  const bolts = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    height: 60 + Math.random() * 90,
+    angle: Math.random() * 360,
+    color: i % 2 === 0 ? "#00FFFF" : "#9B59B6",
+    delay: Math.random() * 4,
+    cycle: 2 + Math.random() * 4,
+  })), []);
 
   return (
     <>
       <style>{`
         @keyframes electric-flash {
-          0%, 100% { opacity: 0; }
-          2% { opacity: 0.4; }
-          4% { opacity: 0; }
-          6% { opacity: 0.35; }
-          8% { opacity: 0; }
+          0%   { opacity: 0; }
+          5%   { opacity: 0.9; }
+          10%  { opacity: 0; }
+          100% { opacity: 0; }
         }
-        @keyframes electric-fullflash {
-          0%, 100% { opacity: 0; }
-          50% { opacity: 0.05; }
-          51% { opacity: 0; }
+        @keyframes electric-bgflash {
+          0%   { opacity: 0; }
+          50%  { opacity: 0.03; }
+          100% { opacity: 0; }
         }
       `}</style>
-      {/* Occasional full-screen white flash */}
       <div style={{
-        position: "absolute", inset: 0, background: "white",
-        animation: "electric-fullflash 7s ease-in-out infinite",
+        position: "absolute", inset: 0, background: "#00FFFF",
+        animation: "electric-bgflash 3s ease-in-out infinite",
       }} />
       {bolts.map(b => (
-        <div key={b.id} style={{
+        <span key={b.id} style={{
           position: "absolute",
           left: `${b.left}%`,
           top: `${b.top}%`,
-          width: `${b.length}vmax`,
-          height: 3,
-          background: `linear-gradient(90deg, transparent, ${b.color} 20%, ${b.color} 80%, transparent)`,
+          width: 2,
+          height: b.height,
+          background: b.color,
           boxShadow: `0 0 8px ${b.color}, 0 0 16px ${b.color}`,
           transform: `rotate(${b.angle}deg)`,
-          transformOrigin: "left center",
+          transformOrigin: "center",
           opacity: 0,
-          animation: `electric-flash ${b.cycle}s ease-in-out ${b.delay}s infinite`,
+          animation: `electric-flash ${b.cycle}s linear ${b.delay}s infinite`,
           borderRadius: 2,
         }} />
       ))}
@@ -67,121 +56,90 @@ const ElectricBg = () => {
 };
 
 const SpaceBg = () => {
-  const stars = useMemo(() => Array.from({ length: 220 }).map((_, i) => ({
+  const stars = useMemo(() => Array.from({ length: 200 }).map((_, i) => ({
     id: i,
     left: Math.random() * 100,
     top: Math.random() * 100,
-    size: 0.5 + Math.random() * 2,
-    delay: Math.random() * 6,
-    duration: 2 + Math.random() * 5,
+    size: 1 + Math.random(),
+    delay: Math.random() * 4,
+    duration: 2 + Math.random() * 2,
     baseOp: 0.3 + Math.random() * 0.7,
   })), []);
-  const shooters = useMemo(() => Array.from({ length: 5 }).map((_, i) => ({
+  const shooters = useMemo(() => Array.from({ length: 4 }).map((_, i) => ({
     id: i,
     top: Math.random() * 60,
-    delay: i * 12 + Math.random() * 8,
+    delay: i * 13 + Math.random() * 5,
   })), []);
   return (
     <>
       <style>{`
         @keyframes star-twinkle {
-          0%, 100% { opacity: var(--op-min, 0.3); transform: scale(0.85); }
-          50%      { opacity: var(--op-max, 1); transform: scale(1.1); }
-        }
-        @keyframes parallax-drift {
-          0%, 100% { transform: translate3d(0,0,0); }
-          50%      { transform: translate3d(-10px, -5px, 0); }
-        }
-        @keyframes nebula-pulse {
-          0%, 100% { opacity: 0.25; transform: scale(1); }
-          50%      { opacity: 0.45; transform: scale(1.15); }
+          0%   { opacity: 0.3; }
+          50%  { opacity: var(--op-max, 1); }
+          100% { opacity: 0.3; }
         }
         @keyframes shooting-star {
-          0%   { transform: translate3d(-10vw, 0, 0) rotate(20deg); opacity: 0; }
-          5%   { opacity: 1; }
-          20%  { opacity: 1; }
-          25%  { transform: translate3d(110vw, 40vh, 0) rotate(20deg); opacity: 0; }
+          0%   { transform: translate3d(110vw, 0, 0) rotate(200deg); opacity: 0; }
+          2%   { opacity: 1; }
+          8%   { opacity: 1; }
+          10%  { transform: translate3d(-20vw, 60vh, 0) rotate(200deg); opacity: 0; }
           100% { opacity: 0; }
         }
       `}</style>
-      {/* Nebulas */}
-      <div style={{
-        position: "absolute", left: "10%", top: "15%", width: "50vw", height: "50vw",
-        background: "radial-gradient(circle, hsla(258, 80%, 50%, 0.5), transparent 60%)",
-        filter: "blur(60px)", animation: "nebula-pulse 14s ease-in-out infinite",
-      }} />
-      <div style={{
-        position: "absolute", right: "5%", bottom: "10%", width: "40vw", height: "40vw",
-        background: "radial-gradient(circle, hsla(220, 90%, 55%, 0.4), transparent 60%)",
-        filter: "blur(70px)", animation: "nebula-pulse 18s ease-in-out 3s infinite",
-      }} />
-      <div style={{ position: "absolute", inset: 0, animation: "parallax-drift 30s ease-in-out infinite" }}>
-        {stars.map(s => (
-          <div key={s.id} style={{
-            position: "absolute", left: `${s.left}%`, top: `${s.top}%`,
-            width: s.size, height: s.size, borderRadius: "50%",
-            background: "white",
-            boxShadow: `0 0 ${s.size * 4}px rgba(255,255,255,0.8)`,
-            ["--op-min" as never]: 0.3,
-            ["--op-max" as never]: s.baseOp,
-            animation: `star-twinkle ${s.duration}s ease-in-out ${s.delay}s infinite`,
-          }} />
-        ))}
-      </div>
-      {/* Shooting stars */}
+      {stars.map(s => (
+        <div key={s.id} style={{
+          position: "absolute", left: `${s.left}%`, top: `${s.top}%`,
+          width: s.size, height: s.size, borderRadius: "50%",
+          background: "white",
+          ["--op-max" as never]: s.baseOp,
+          animation: `star-twinkle ${s.duration}s ease-in-out ${s.delay}s infinite`,
+        }} />
+      ))}
       {shooters.map(sh => (
         <div key={sh.id} style={{
-          position: "absolute", top: `${sh.top}%`, left: 0,
-          width: 120, height: 2,
-          background: "linear-gradient(90deg, transparent, white, transparent)",
-          boxShadow: "0 0 8px white, 0 0 16px white",
-          animation: `shooting-star 60s linear ${sh.delay}s infinite`,
+          position: "absolute", top: `${sh.top}%`, right: 0,
+          width: 100, height: 1.5,
+          background: "linear-gradient(90deg, transparent, white)",
+          boxShadow: "0 0 6px white",
+          animation: `shooting-star 12s linear ${sh.delay}s infinite`,
         }} />
       ))}
     </>
   );
 };
 
-const AuroraBg = () => (
-  <>
-    <style>{`
-      @keyframes aurora-flow-1 {
-        0%, 100% { background-position: 0% 0%, 100% 100%; }
-        50%      { background-position: 100% 50%, 0% 50%; }
-      }
-      @keyframes aurora-flow-2 {
-        0%, 100% { background-position: 100% 0%, 0% 100%; }
-        50%      { background-position: 0% 100%, 100% 0%; }
-      }
-      @keyframes aurora-wave {
-        0%, 100% { transform: translateY(0) skewY(0deg); }
-        50%      { transform: translateY(20px) skewY(-2deg); }
-      }
-    `}</style>
-    <div style={{
-      position: "absolute", inset: "-20%",
-      background: `
-        radial-gradient(ellipse 60% 40% at 30% 30%, rgba(0, 255, 136, 0.35), transparent 60%),
-        radial-gradient(ellipse 50% 35% at 70% 60%, rgba(123, 47, 190, 0.40), transparent 60%)
-      `,
-      backgroundSize: "200% 200%, 200% 200%",
-      filter: "blur(50px)",
-      opacity: 0.7,
-      animation: "aurora-flow-1 18s ease-in-out infinite, aurora-wave 14s ease-in-out infinite",
-    }} />
-    <div style={{
-      position: "absolute", inset: "-20%",
-      background: `
-        radial-gradient(ellipse 55% 35% at 60% 20%, rgba(0, 191, 255, 0.35), transparent 60%),
-        radial-gradient(ellipse 50% 30% at 25% 75%, rgba(255, 107, 157, 0.30), transparent 60%)
-      `,
-      backgroundSize: "200% 200%, 200% 200%",
-      filter: "blur(60px)",
-      opacity: 0.6,
-      animation: "aurora-flow-2 22s ease-in-out infinite",
-    }} />
-  </>
-);
+const AuroraBg = () => {
+  const blobs = [
+    { size: 400, color: "#00FF88", pos: { top: -100, left: -100 } as React.CSSProperties, duration: 12, delay: 0 },
+    { size: 350, color: "#7B2FBE", pos: { top: 100, right: -50 } as React.CSSProperties, duration: 14, delay: 2 },
+    { size: 300, color: "#00BFFF", pos: { bottom: 100, left: 50 } as React.CSSProperties, duration: 11, delay: 4 },
+    { size: 380, color: "#FF6B9D", pos: { bottom: -50, right: 100 } as React.CSSProperties, duration: 15, delay: 1 },
+  ];
+  return (
+    <>
+      <style>{`
+        @keyframes aurora-float {
+          0%   { transform: translate(0px, 0px); }
+          33%  { transform: translate(30px, -20px); }
+          66%  { transform: translate(-20px, 30px); }
+          100% { transform: translate(0px, 0px); }
+        }
+      `}</style>
+      {blobs.map((b, i) => (
+        <div key={i} style={{
+          position: "absolute",
+          width: b.size, height: b.size,
+          borderRadius: "50%",
+          background: b.color,
+          filter: "blur(80px)",
+          opacity: 0.2,
+          animation: `aurora-float ${b.duration}s ease-in-out ${b.delay}s infinite`,
+          ...b.pos,
+        }} />
+      ))}
+    </>
+  );
+};
 
 const MatrixBg = () => {
   const cols = useMemo(() => Array.from({ length: 18 }).map((_, i) => ({
