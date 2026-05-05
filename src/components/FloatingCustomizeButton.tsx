@@ -319,25 +319,33 @@ const FloatingCustomizeButton = () => {
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCustomImage(f); e.target.value = ""; }} />
                 </div>
 
-                {preset === "custom" && customConfig && (
+                {preset === "custom" && customConfig ? (
                   <div className="mt-3 p-3 rounded-xl glass-card flex items-center gap-3">
                     {customConfig.imagePreview && (
                       <img src={customConfig.imagePreview} alt="" className="w-12 h-12 rounded-lg object-cover" />
                     )}
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-foreground">Custom AI ✨ Active</p>
-                      <div className="flex gap-1 mt-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-foreground">Custom AI ⚡ Active</p>
+                      <div className="flex items-center gap-1 mt-1">
                         {[customConfig.color1, customConfig.color2, customConfig.color3].map((c, i) => (
-                          <span key={i} className="w-3 h-3 rounded-full" style={{ background: c }} />
+                          <span key={i} className="w-3 h-3 rounded-full ring-1 ring-white/30" style={{ background: c }} />
                         ))}
+                        <span className="text-[9px] text-muted-foreground ml-1 truncate">Glitch + Particles</span>
                       </div>
                     </div>
                     <button onClick={() => fileRef.current?.click()}
                       className="text-[10px] px-2 py-1 rounded-full bg-primary/20 text-primary font-bold">Change</button>
                     <button onClick={() => { setCustomConfig(null); setPreset("minimal", true); }}
-                      className="p-1.5 rounded-full text-destructive">
+                      className="p-1.5 rounded-full text-destructive" aria-label="Remove">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
+                  </div>
+                ) : aiActive && (
+                  <div className="mt-3 p-3 rounded-xl glass-card text-[11px] text-muted-foreground space-y-1">
+                    <p className="font-bold text-foreground text-xs">What happens:</p>
+                    <p>📸 Photo becomes cartoon</p>
+                    <p>⚡ Glitch effect applied</p>
+                    <p>🎨 App colors change too!</p>
                   </div>
                 )}
               </section>
