@@ -306,10 +306,6 @@ const GlitchBg = ({ cartoonImage, color1, color2, color3 }: { cartoonImage: stri
 
 const CustomBg = ({ cfg }: { cfg: CustomConfig }) => {
   const { color1, color2, color3, style, cartoonImage } = cfg;
-
-  if (style === "glitch" && cartoonImage) {
-    return <GlitchBg cartoonImage={cartoonImage} color1={color1} color2={color2} color3={color3} />;
-  }
   const particles = useMemo(() => Array.from({ length: 40 }).map((_, i) => ({
     id: i,
     left: Math.random() * 100,
@@ -319,6 +315,10 @@ const CustomBg = ({ cfg }: { cfg: CustomConfig }) => {
     duration: 10 + Math.random() * 12,
     color: [color1, color2, color3][i % 3],
   })), [color1, color2, color3]);
+
+  if (style === "glitch" && cartoonImage) {
+    return <GlitchBg cartoonImage={cartoonImage} color1={color1} color2={color2} color3={color3} />;
+  }
 
   if (style === "waves") {
     return (
