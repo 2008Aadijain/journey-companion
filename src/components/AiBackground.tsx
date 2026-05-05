@@ -207,11 +207,109 @@ const MinimalBg = () => {
 
 interface CustomConfig {
   color1: string; color2: string; color3: string;
-  style: "waves" | "particles" | "glow";
+  style: "waves" | "particles" | "glow" | "glitch";
+  cartoonImage?: string;
 }
 
+const GlitchBg = ({ cartoonImage, color1, color2, color3 }: { cartoonImage: string; color1: string; color2: string; color3: string }) => {
+  const particles = useMemo(() => Array.from({ length: 50 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    size: 2 + Math.random() * 4,
+    delay: Math.random() * 10,
+    duration: 8 + Math.random() * 7,
+    opacity: 0.3 + Math.random() * 0.5,
+    color: [color1, color2, color3][i % 3],
+  })), [color1, color2, color3]);
+
+  return (
+    <>
+      <style>{`
+        @keyframes glitchAnim {
+          0%   { transform: translate(0); filter: hue-rotate(0deg); clip-path: inset(0); }
+          2%   { transform: translate(-3px, 1px); filter: hue-rotate(90deg); clip-path: inset(10% 0 80% 0); }
+          4%   { transform: translate(3px, -1px); filter: hue-rotate(0deg); clip-path: inset(0); }
+          6%   { transform: translate(-2px, 2px); clip-path: inset(60% 0 20% 0); }
+          8%   { transform: translate(0); clip-path: inset(0); }
+          100% { transform: translate(0); filter: hue-rotate(0deg); }
+        }
+        @keyframes glitchRed {
+          0%, 100% { transform: translate(0); }
+          2%   { transform: translate(4px, 0); }
+          4%   { transform: translate(0); }
+          6%   { transform: translate(-4px, 0); }
+          8%   { transform: translate(0); }
+        }
+        @keyframes glitchCyan {
+          0%, 100% { transform: translate(0); }
+          2%   { transform: translate(-4px, 0); }
+          4%   { transform: translate(0); }
+          6%   { transform: translate(4px, 0); }
+          8%   { transform: translate(0); }
+        }
+        @keyframes floatUp {
+          0%   { transform: translateY(100vh); opacity: 0; }
+          10%  { opacity: 0.6; }
+          90%  { opacity: 0.6; }
+          100% { transform: translateY(-100px); opacity: 0; }
+        }
+      `}</style>
+      {/* Base cartoon image */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `url(${cartoonImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        opacity: 0.25,
+        animation: "glitchAnim 8s infinite",
+      }} />
+      {/* Red channel split */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `url(${cartoonImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        mixBlendMode: "screen",
+        opacity: 0.1,
+        filter: "hue-rotate(-30deg) saturate(2)",
+        animation: "glitchRed 8s infinite",
+      }} />
+      {/* Cyan channel split */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `url(${cartoonImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        mixBlendMode: "screen",
+        opacity: 0.1,
+        filter: "hue-rotate(150deg) saturate(2)",
+        animation: "glitchCyan 8s infinite",
+      }} />
+      {/* Floating particles */}
+      {particles.map(p => (
+        <div key={p.id} style={{
+          position: "absolute",
+          left: `${p.left}%`,
+          bottom: 0,
+          width: p.size,
+          height: p.size,
+          borderRadius: "50%",
+          background: p.color,
+          opacity: p.opacity,
+          boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+          animation: `floatUp ${p.duration}s linear ${p.delay}s infinite`,
+        }} />
+      ))}
+    </>
+  );
+};
+
 const CustomBg = ({ cfg }: { cfg: CustomConfig }) => {
-  const { color1, color2, color3, style } = cfg;
+  const { color1, color2, color3, style, cartoonImage } = cfg;
+
+  if (style === "glitch" && cartoonImage) {
+    return <GlitchBg cartoonImage={cartoonImage} color1={color1} color2={color2} color3={color3} />;
+  }
   const particles = useMemo(() => Array.from({ length: 40 }).map((_, i) => ({
     id: i,
     left: Math.random() * 100,
