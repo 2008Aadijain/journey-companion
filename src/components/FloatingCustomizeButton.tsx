@@ -138,20 +138,22 @@ const FloatingCustomizeButton = () => {
     return () => clearInterval(id);
   }, [generating]);
 
-  const callGeminiForColors = async (base64: string, mime: string): Promise<{ c1: string; c2: string; c3: string } | null> => {
+  const callGeminiForColors = async (base64: string, mime: string): Promise<{ c1: string; c2: string; c3: string; animation?: string } | null> => {
     const key = localStorage.getItem("gm-gemini-key");
     if (!key) return null;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
-    const prompt = `3 dominant colors in image? Return only JSON: {"c1":"#RRGGBB","c2":"#RRGGBB","c3":"#RRGGBB"}`;
+    const userPrompt = `Analyze this image. Extract dominant colors and mood. Return ONLY this JSON:
+{"colors":{"primary":"#hexcode","secondary":"#hexcode","accent":"#hexcode"},"mood":"calm|energetic|warm|cool|dreamy|dark","animation":"waves|particles|glow|electric"}`;
     const doFetch = () => fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        systemInstruction: { role: "system", parts: [{ text: BACKGROUND_SYSTEM_PROMPT }] },
         contents: [{ role: "user", parts: [
-          { text: prompt },
+          { text: userPrompt },
           { inline_data: { mime_type: mime, data: base64 } },
         ] }],
-        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 80 },
+        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 150 },
       }),
     });
     let res = await doFetch();
@@ -164,7 +166,12 @@ const FloatingCustomizeButton = () => {
     const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     try {
       const parsed = JSON.parse(text.replace(/^```json\s*|\s*```$/g, "").trim());
-      return { c1: parsed.c1 || parsed.color1, c2: parsed.c2 || parsed.color2, c3: parsed.c3 || parsed.color3 };
+      const colors = parsed.colors || parsed;
+      const c1 = colors.primary || colors.c1;
+      const c2 = colors.secondary || colors.c2;
+      const c3 = colors.accent || colors.c3;
+      if (!c1 || !c2 || !c3) return null;
+      return { c1, c2, c3, animation: parsed.animation };
     } catch { return null; }
   };
 
@@ -174,8 +181,12 @@ const FloatingCustomizeButton = () => {
       return;
     }
     setGenerating(true);
+    toast({ title: "✨ AI is transforming your photo..." });
     try {
-      const { base64, dataUrl, thumb } = await compressImage(file);
+      const { base64, dataUrl, thumb, img } = await compressImage(file);
+
+      // Apply cartoon effect (works without API)
+      const cartoon = applyCartoonEffect(img);
 
       let c1 = "", c2 = "", c3 = "";
       const ai = await callGeminiForColors(base64, "image/jpeg").catch(() => null);
@@ -188,13 +199,14 @@ const FloatingCustomizeButton = () => {
 
       const cfg: CustomBgConfig = {
         color1: c1, color2: c2, color3: c3,
-        style: "waves",
+        style: "glitch",
         imagePreview: thumb,
+        cartoonImage: cartoon,
       };
       setCustomConfig(cfg);
       setPreset("custom", true);
       localStorage.setItem("gm-custombg-last", String(Date.now()));
-      toast({ title: "Theme created! 🎨" });
+      toast({ title: "Magic created! ✨" });
     } catch (e) {
       console.error(e);
       toast({ title: "Couldn't process image. Try another.", variant: "destructive" });
