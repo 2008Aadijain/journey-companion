@@ -8,24 +8,39 @@ import { useToast } from "@/hooks/use-toast";
 
 const COOLDOWN_MS = 60_000;
 
-// Compress to 256x256 JPEG q=0.5 and return base64 (no prefix)
-const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; thumb: string }> =>
+// System prompt for color/mood analysis
+const BACKGROUND_SYSTEM_PROMPT = `
+You are a color and mood analyzer.
+When given an image, you must:
+1. Extract the 3 most dominant colors
+2. Detect the mood/vibe of the image
+3. Suggest an animation style
+
+You help create beautiful animated app backgrounds based on photos.
+Always return valid hex color codes.
+Keep response minimal and precise.
+`.trim();
+
+// Compress to 512x512 JPEG and return base64 + dataUrl + thumb + a 512 canvas
+const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; thumb: string; img: HTMLImageElement }> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
         const c = document.createElement("canvas");
-        c.width = 256; c.height = 256;
+        c.width = 512; c.height = 512;
         const ctx = c.getContext("2d");
         if (!ctx) return reject(new Error("Canvas unavailable"));
-        ctx.drawImage(img, 0, 0, 256, 256);
-        const dataUrl = c.toDataURL("image/jpeg", 0.5);
+        ctx.drawImage(img, 0, 0, 512, 512);
+        const dataUrl = c.toDataURL("image/jpeg", 0.7);
         const tc = document.createElement("canvas");
         tc.width = 80; tc.height = 80;
         tc.getContext("2d")!.drawImage(img, 0, 0, 80, 80);
         const thumb = tc.toDataURL("image/jpeg", 0.7);
-        resolve({ base64: dataUrl.split(",")[1], dataUrl, thumb });
+        const out = new Image();
+        out.onload = () => resolve({ base64: dataUrl.split(",")[1], dataUrl, thumb, img: out });
+        out.src = dataUrl;
       };
       img.onerror = reject;
       img.src = reader.result as string;
@@ -33,6 +48,28 @@ const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; t
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+// Apply cartoon (posterize + contrast + saturation) to image
+const applyCartoonEffect = (img: HTMLImageElement): string => {
+  const c = document.createElement("canvas");
+  const W = 512, H = 512;
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  if (!ctx) return img.src;
+  // boost contrast & saturation via filter, then posterize manually
+  ctx.filter = "contrast(150%) saturate(120%)";
+  ctx.drawImage(img, 0, 0, W, H);
+  ctx.filter = "none";
+  const imgData = ctx.getImageData(0, 0, W, H);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]     = Math.round(d[i] / 64) * 64;
+    d[i + 1] = Math.round(d[i + 1] / 64) * 64;
+    d[i + 2] = Math.round(d[i + 2] / 64) * 64;
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return c.toDataURL("image/jpeg", 0.75);
+};
 
 // Canvas-based dominant color extraction (3 colors via simple bucketing)
 const extractColorsFromCanvas = (dataUrl: string): Promise<[string, string, string]> =>
