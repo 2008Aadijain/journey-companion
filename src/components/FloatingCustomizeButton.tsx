@@ -1,31 +1,46 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Sparkles, Moon, Sun, Palette, Type, Image as ImageIcon, Bot, Lock, Loader2, Trash2 } from "lucide-react";
+import { X, Sparkles, Moon, Sun, Palette, Type, Bot, Lock, Loader2, Trash2 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
-import { useBackground, BG_PRESETS, type BgPreset, type CustomBgConfig } from "@/hooks/useBackground";
-import { isAiActive, callGemini } from "@/lib/gemini";
+import { useBackground, BG_PRESETS, type CustomBgConfig } from "@/hooks/useBackground";
+import { isAiActive } from "@/lib/gemini";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
 const COOLDOWN_MS = 60_000;
 
-// Compress to 256x256 JPEG q=0.5 and return base64 (no prefix)
-const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; thumb: string }> =>
+// System prompt for color/mood analysis
+const BACKGROUND_SYSTEM_PROMPT = `
+You are a color and mood analyzer.
+When given an image, you must:
+1. Extract the 3 most dominant colors
+2. Detect the mood/vibe of the image
+3. Suggest an animation style
+
+You help create beautiful animated app backgrounds based on photos.
+Always return valid hex color codes.
+Keep response minimal and precise.
+`.trim();
+
+// Compress to 512x512 JPEG and return base64 + dataUrl + thumb + a 512 canvas
+const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; thumb: string; img: HTMLImageElement }> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
         const c = document.createElement("canvas");
-        c.width = 256; c.height = 256;
+        c.width = 512; c.height = 512;
         const ctx = c.getContext("2d");
         if (!ctx) return reject(new Error("Canvas unavailable"));
-        ctx.drawImage(img, 0, 0, 256, 256);
-        const dataUrl = c.toDataURL("image/jpeg", 0.5);
+        ctx.drawImage(img, 0, 0, 512, 512);
+        const dataUrl = c.toDataURL("image/jpeg", 0.7);
         const tc = document.createElement("canvas");
         tc.width = 80; tc.height = 80;
         tc.getContext("2d")!.drawImage(img, 0, 0, 80, 80);
         const thumb = tc.toDataURL("image/jpeg", 0.7);
-        resolve({ base64: dataUrl.split(",")[1], dataUrl, thumb });
+        const out = new Image();
+        out.onload = () => resolve({ base64: dataUrl.split(",")[1], dataUrl, thumb, img: out });
+        out.src = dataUrl;
       };
       img.onerror = reject;
       img.src = reader.result as string;
@@ -33,6 +48,28 @@ const compressImage = (file: File): Promise<{ base64: string; dataUrl: string; t
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+// Apply cartoon (posterize + contrast + saturation) to image
+const applyCartoonEffect = (img: HTMLImageElement): string => {
+  const c = document.createElement("canvas");
+  const W = 512, H = 512;
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  if (!ctx) return img.src;
+  // boost contrast & saturation via filter, then posterize manually
+  ctx.filter = "contrast(150%) saturate(120%)";
+  ctx.drawImage(img, 0, 0, W, H);
+  ctx.filter = "none";
+  const imgData = ctx.getImageData(0, 0, W, H);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]     = Math.round(d[i] / 64) * 64;
+    d[i + 1] = Math.round(d[i + 1] / 64) * 64;
+    d[i + 2] = Math.round(d[i + 2] / 64) * 64;
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return c.toDataURL("image/jpeg", 0.75);
+};
 
 // Canvas-based dominant color extraction (3 colors via simple bucketing)
 const extractColorsFromCanvas = (dataUrl: string): Promise<[string, string, string]> =>
@@ -101,20 +138,22 @@ const FloatingCustomizeButton = () => {
     return () => clearInterval(id);
   }, [generating]);
 
-  const callGeminiForColors = async (base64: string, mime: string): Promise<{ c1: string; c2: string; c3: string } | null> => {
+  const callGeminiForColors = async (base64: string, mime: string): Promise<{ c1: string; c2: string; c3: string; animation?: string } | null> => {
     const key = localStorage.getItem("gm-gemini-key");
     if (!key) return null;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
-    const prompt = `3 dominant colors in image? Return only JSON: {"c1":"#RRGGBB","c2":"#RRGGBB","c3":"#RRGGBB"}`;
+    const userPrompt = `Analyze this image. Extract dominant colors and mood. Return ONLY this JSON:
+{"colors":{"primary":"#hexcode","secondary":"#hexcode","accent":"#hexcode"},"mood":"calm|energetic|warm|cool|dreamy|dark","animation":"waves|particles|glow|electric"}`;
     const doFetch = () => fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        systemInstruction: { role: "system", parts: [{ text: BACKGROUND_SYSTEM_PROMPT }] },
         contents: [{ role: "user", parts: [
-          { text: prompt },
+          { text: userPrompt },
           { inline_data: { mime_type: mime, data: base64 } },
         ] }],
-        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 80 },
+        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 150 },
       }),
     });
     let res = await doFetch();
@@ -127,7 +166,12 @@ const FloatingCustomizeButton = () => {
     const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     try {
       const parsed = JSON.parse(text.replace(/^```json\s*|\s*```$/g, "").trim());
-      return { c1: parsed.c1 || parsed.color1, c2: parsed.c2 || parsed.color2, c3: parsed.c3 || parsed.color3 };
+      const colors = parsed.colors || parsed;
+      const c1 = colors.primary || colors.c1;
+      const c2 = colors.secondary || colors.c2;
+      const c3 = colors.accent || colors.c3;
+      if (!c1 || !c2 || !c3) return null;
+      return { c1, c2, c3, animation: parsed.animation };
     } catch { return null; }
   };
 
@@ -137,8 +181,12 @@ const FloatingCustomizeButton = () => {
       return;
     }
     setGenerating(true);
+    toast({ title: "✨ AI is transforming your photo..." });
     try {
-      const { base64, dataUrl, thumb } = await compressImage(file);
+      const { base64, dataUrl, thumb, img } = await compressImage(file);
+
+      // Apply cartoon effect (works without API)
+      const cartoon = applyCartoonEffect(img);
 
       let c1 = "", c2 = "", c3 = "";
       const ai = await callGeminiForColors(base64, "image/jpeg").catch(() => null);
@@ -151,13 +199,14 @@ const FloatingCustomizeButton = () => {
 
       const cfg: CustomBgConfig = {
         color1: c1, color2: c2, color3: c3,
-        style: "waves",
+        style: "glitch",
         imagePreview: thumb,
+        cartoonImage: cartoon,
       };
       setCustomConfig(cfg);
       setPreset("custom", true);
       localStorage.setItem("gm-custombg-last", String(Date.now()));
-      toast({ title: "Theme created! 🎨" });
+      toast({ title: "Magic created! ✨" });
     } catch (e) {
       console.error(e);
       toast({ title: "Couldn't process image. Try another.", variant: "destructive" });
@@ -270,25 +319,33 @@ const FloatingCustomizeButton = () => {
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCustomImage(f); e.target.value = ""; }} />
                 </div>
 
-                {preset === "custom" && customConfig && (
+                {preset === "custom" && customConfig ? (
                   <div className="mt-3 p-3 rounded-xl glass-card flex items-center gap-3">
                     {customConfig.imagePreview && (
                       <img src={customConfig.imagePreview} alt="" className="w-12 h-12 rounded-lg object-cover" />
                     )}
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-foreground">Custom AI ✨ Active</p>
-                      <div className="flex gap-1 mt-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-foreground">Custom AI ⚡ Active</p>
+                      <div className="flex items-center gap-1 mt-1">
                         {[customConfig.color1, customConfig.color2, customConfig.color3].map((c, i) => (
-                          <span key={i} className="w-3 h-3 rounded-full" style={{ background: c }} />
+                          <span key={i} className="w-3 h-3 rounded-full ring-1 ring-white/30" style={{ background: c }} />
                         ))}
+                        <span className="text-[9px] text-muted-foreground ml-1 truncate">Glitch + Particles</span>
                       </div>
                     </div>
                     <button onClick={() => fileRef.current?.click()}
                       className="text-[10px] px-2 py-1 rounded-full bg-primary/20 text-primary font-bold">Change</button>
                     <button onClick={() => { setCustomConfig(null); setPreset("minimal", true); }}
-                      className="p-1.5 rounded-full text-destructive">
+                      className="p-1.5 rounded-full text-destructive" aria-label="Remove">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
+                  </div>
+                ) : aiActive && (
+                  <div className="mt-3 p-3 rounded-xl glass-card text-[11px] text-muted-foreground space-y-1">
+                    <p className="font-bold text-foreground text-xs">What happens:</p>
+                    <p>📸 Photo becomes cartoon</p>
+                    <p>⚡ Glitch effect applied</p>
+                    <p>🎨 App colors change too!</p>
                   </div>
                 )}
               </section>
