@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Sparkles, Moon, Sun, Palette, Type, Image as ImageIcon, Bot, Lock, Loader2, Trash2 } from "lucide-react";
+import { X, Sparkles, Moon, Sun, Palette, Type, Bot, Lock, Loader2, Trash2 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
-import { useBackground, BG_PRESETS, type BgPreset, type CustomBgConfig } from "@/hooks/useBackground";
-import { isAiActive, callGemini } from "@/lib/gemini";
+import { useBackground, BG_PRESETS, type CustomBgConfig } from "@/hooks/useBackground";
+import { isAiActive } from "@/lib/gemini";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
