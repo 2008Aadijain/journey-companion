@@ -175,9 +175,16 @@ const Login = () => {
           </button>
         </form>
 
+        {showFirstTimeHint && mode === "login" && (
+          <div className="mt-4 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3 text-xs text-muted-foreground fade-up fade-up-delay-3">
+            <div className="font-semibold text-foreground mb-0.5">👋 First time here?</div>
+            <div>→ Create your free account and start your journey!</div>
+          </div>
+        )}
+
         <button onClick={() => setMode(mode === "login" ? "signup" : "login")}
-          className="mt-4 w-full text-center text-sm text-primary hover:text-primary/80 transition-colors font-semibold fade-up fade-up-delay-3">
-          {mode === "login" ? "New here? Sign up" : "Already have an account? Log in"}
+          className="mt-3 w-full text-center text-sm text-primary hover:text-primary/80 transition-colors font-semibold fade-up fade-up-delay-3">
+          {mode === "login" ? "New here? Sign up ↑" : "Already have an account? Log in"}
         </button>
       </div>
     </div>
