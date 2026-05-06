@@ -463,11 +463,29 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  if (loading || !profile) return (
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setLoadingTimedOut(true), 2000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if ((loading || !profile) && !loadingTimedOut) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="text-5xl mb-4 animate-pulse">🎯</div>
         <p className="text-muted-foreground text-sm">Loading your journey...</p>
+      </div>
+    </div>
+  );
+
+  if (!profile) return (
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="text-center">
+        <div className="text-5xl mb-4">🎯</div>
+        <p className="text-muted-foreground text-sm mb-4">Setting things up…</p>
+        <button onClick={() => navigate("/goal-setup")} className="glow-button text-primary-foreground px-6 py-3 text-sm">
+          Continue setup
+        </button>
       </div>
     </div>
   );
