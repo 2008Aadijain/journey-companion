@@ -24,7 +24,12 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [profile, setProfile] = useState<Tables<"profiles"> | null>(() => {
+    try {
+      const cached = localStorage.getItem("gm-profile-cache");
+      return cached ? JSON.parse(cached) : null;
+    } catch { return null; }
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -33,7 +38,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .select("*")
       .eq("user_id", userId)
       .single();
-    setProfile(data);
+    if (data) {
+      setProfile(data);
+      try { localStorage.setItem("gm-profile-cache", JSON.stringify(data)); } catch {}
+    }
   };
 
   useEffect(() => {
