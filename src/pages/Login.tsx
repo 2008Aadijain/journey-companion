@@ -12,6 +12,17 @@ const Login = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [showFirstTimeHint] = useState(() => !localStorage.getItem("gm-has-logged-in"));
+
+  const friendlyError = (msg: string) => {
+    const m = (msg || "").toLowerCase();
+    if (m.includes("invalid login") || m.includes("invalid credentials")) return "Wrong email or password";
+    if (m.includes("network") || m.includes("fetch")) return "Check your internet connection";
+    if (m.includes("jwt") || m.includes("expired")) return "Session expired, please log in again";
+    if (m.includes("duplicate") || m.includes("already registered")) return "Account already exists — try logging in";
+    if (m.includes("email") && m.includes("confirm")) return "Please confirm your email first";
+    return "Something went wrong. Please try again.";
+  };
 
   useEffect(() => {
     if (!loading && user && profile) {
