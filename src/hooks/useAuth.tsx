@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     if (!data.user) return { error: "Signup failed" };
 
-    const { error: profileError } = await supabase.from("profiles").insert({
+    const { error: profileError } = await supabase.from("profiles").upsert({
       user_id: data.user.id,
       name: meta.name,
       goal_category: meta.goalCategory,
@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       goal_emoji: meta.goalEmoji,
       deadline: meta.deadline,
       is_custom: meta.isCustom,
-    });
+    }, { onConflict: "user_id" });
 
     if (profileError) return { error: profileError.message };
     await fetchProfile(data.user.id);
