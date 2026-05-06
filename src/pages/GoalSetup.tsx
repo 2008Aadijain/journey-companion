@@ -47,7 +47,7 @@ const GoalSetup = () => {
     if (!selectedGoal || !deadline || !user || !name.trim()) return;
     setFormLoading(true);
 
-    const { error } = await supabase.from("profiles").insert({
+    const { error } = await supabase.from("profiles").upsert({
       user_id: user.id,
       name: name.trim(),
       goal_category: selectedGoal.category || selectedGoal.id,
@@ -55,7 +55,7 @@ const GoalSetup = () => {
       goal_emoji: selectedGoal.emoji,
       deadline: deadline.toISOString().split("T")[0],
       is_custom: selectedGoal.id === "custom",
-    });
+    }, { onConflict: "user_id" });
 
     setFormLoading(false);
     if (error) {

@@ -12,11 +12,24 @@ const Login = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [showFirstTimeHint] = useState(() => !localStorage.getItem("gm-has-logged-in"));
+
+  const friendlyError = (msg: string) => {
+    const m = (msg || "").toLowerCase();
+    if (m.includes("invalid login") || m.includes("invalid credentials")) return "Wrong email or password";
+    if (m.includes("network") || m.includes("fetch")) return "Check your internet connection";
+    if (m.includes("jwt") || m.includes("expired")) return "Session expired, please log in again";
+    if (m.includes("duplicate") || m.includes("already registered")) return "Account already exists — try logging in";
+    if (m.includes("email") && m.includes("confirm")) return "Please confirm your email first";
+    return "Something went wrong. Please try again.";
+  };
 
   useEffect(() => {
     if (!loading && user && profile) {
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
       navigate("/dashboard", { replace: true });
     } else if (!loading && user && !profile) {
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
       navigate("/goal-setup", { replace: true });
     }
   }, [loading, user, profile, navigate]);
@@ -27,10 +40,10 @@ const Login = () => {
     const { error } = await signIn(form.email, form.password);
     setFormLoading(false);
     if (error) {
-      toast({ title: "Login failed", description: error, variant: "destructive" });
+      toast({ title: "Login failed", description: friendlyError(error), variant: "destructive" });
       return;
     }
-    // Auth state change will trigger redirect
+    try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -43,11 +56,11 @@ const Login = () => {
     const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password });
     setFormLoading(false);
     if (error) {
-      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+      toast({ title: "Signup failed", description: friendlyError(error.message), variant: "destructive" });
       return;
     }
     if (data.user) {
-      // New user → goal setup
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
       navigate("/goal-setup");
     }
   };
@@ -57,7 +70,7 @@ const Login = () => {
       provider: "google",
       options: { redirectTo: window.location.origin + "/dashboard" },
     });
-    if (error) toast({ title: "Google login failed", description: error.message, variant: "destructive" });
+    if (error) toast({ title: "Google login failed", description: friendlyError(error.message), variant: "destructive" });
   };
 
   const handleForgotPassword = async () => {
@@ -162,9 +175,16 @@ const Login = () => {
           </button>
         </form>
 
+        {showFirstTimeHint && mode === "login" && (
+          <div className="mt-4 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3 text-xs text-muted-foreground fade-up fade-up-delay-3">
+            <div className="font-semibold text-foreground mb-0.5">👋 First time here?</div>
+            <div>→ Create your free account and start your journey!</div>
+          </div>
+        )}
+
         <button onClick={() => setMode(mode === "login" ? "signup" : "login")}
-          className="mt-4 w-full text-center text-sm text-primary hover:text-primary/80 transition-colors font-semibold fade-up fade-up-delay-3">
-          {mode === "login" ? "New here? Sign up" : "Already have an account? Log in"}
+          className="mt-3 w-full text-center text-sm text-primary hover:text-primary/80 transition-colors font-semibold fade-up fade-up-delay-3">
+          {mode === "login" ? "New here? Sign up ↑" : "Already have an account? Log in"}
         </button>
       </div>
     </div>
