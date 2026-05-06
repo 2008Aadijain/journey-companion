@@ -26,8 +26,10 @@ const Login = () => {
 
   useEffect(() => {
     if (!loading && user && profile) {
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
       navigate("/dashboard", { replace: true });
     } else if (!loading && user && !profile) {
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
       navigate("/goal-setup", { replace: true });
     }
   }, [loading, user, profile, navigate]);
@@ -38,10 +40,10 @@ const Login = () => {
     const { error } = await signIn(form.email, form.password);
     setFormLoading(false);
     if (error) {
-      toast({ title: "Login failed", description: error, variant: "destructive" });
+      toast({ title: "Login failed", description: friendlyError(error), variant: "destructive" });
       return;
     }
-    // Auth state change will trigger redirect
+    try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -54,11 +56,11 @@ const Login = () => {
     const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password });
     setFormLoading(false);
     if (error) {
-      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+      toast({ title: "Signup failed", description: friendlyError(error.message), variant: "destructive" });
       return;
     }
     if (data.user) {
-      // New user → goal setup
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
       navigate("/goal-setup");
     }
   };
@@ -68,7 +70,7 @@ const Login = () => {
       provider: "google",
       options: { redirectTo: window.location.origin + "/dashboard" },
     });
-    if (error) toast({ title: "Google login failed", description: error.message, variant: "destructive" });
+    if (error) toast({ title: "Google login failed", description: friendlyError(error.message), variant: "destructive" });
   };
 
   const handleForgotPassword = async () => {
