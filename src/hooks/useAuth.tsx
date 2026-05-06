@@ -127,6 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
+    try { localStorage.removeItem("gm-profile-cache"); } catch {}
   };
 
   const refreshProfile = async () => {
