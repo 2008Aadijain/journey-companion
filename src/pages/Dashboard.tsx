@@ -463,29 +463,27 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  // If auth is settled and the user has no profile, send them to setup
   useEffect(() => {
-    const t = setTimeout(() => setLoadingTimedOut(true), 2000);
-    return () => clearTimeout(t);
-  }, []);
+    if (!loading && user && !profile) {
+      // Double-check directly against DB before redirecting (avoids stale cache)
+      (async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!data) navigate("/goal-setup", { replace: true });
+        else refreshProfile();
+      })();
+    }
+  }, [loading, user, profile, navigate, refreshProfile]);
 
-  if ((loading || !profile) && !loadingTimedOut) return (
+  if (loading || !profile) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="text-5xl mb-4 animate-pulse">🎯</div>
         <p className="text-muted-foreground text-sm">Loading your journey...</p>
-      </div>
-    </div>
-  );
-
-  if (!profile) return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="text-center">
-        <div className="text-5xl mb-4">🎯</div>
-        <p className="text-muted-foreground text-sm mb-4">Setting things up…</p>
-        <button onClick={() => navigate("/goal-setup")} className="glow-button text-primary-foreground px-6 py-3 text-sm">
-          Continue setup
-        </button>
       </div>
     </div>
   );
