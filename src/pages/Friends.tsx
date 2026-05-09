@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, UserPlus, Users, Plus, Check, X, Flame, MessageCircle, Sparkles, Clock, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,12 +58,7 @@ const Friends = () => {
     if (!loading && !user) navigate("/goal-setup");
   }, [loading, user, navigate]);
 
-  useEffect(() => {
-    if (!user) return;
-    loadData();
-  }, [user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
 
     // Load friend requests
@@ -125,9 +120,9 @@ const Friends = () => {
     } else {
       setGroups([]);
     }
-  };
+  }, [user]);
 
-  const searchUsers = async (query: string) => {
+  const searchUsers = useCallback(async (query: string) => {
     if (!query.trim() || !user) { setAllUsers([]); return; }
     const { data } = await supabase
       .from("profiles")
@@ -136,12 +131,12 @@ const Friends = () => {
       .neq("user_id", user.id)
       .limit(20);
     if (data) setAllUsers(data);
-  };
+  }, [user]);
 
   useEffect(() => {
     const timeout = setTimeout(() => searchUsers(searchQuery), 300);
     return () => clearTimeout(timeout);
-  }, [searchQuery]);
+  }, [searchQuery, searchUsers]);
 
   const sendRequest = async (receiverId: string) => {
     if (!user) return;

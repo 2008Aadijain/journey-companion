@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { I18nProvider } from "@/hooks/useI18n";
 import { BackgroundProvider } from "@/hooks/useBackground";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AiBackground from "@/components/AiBackground";
 import FloatingCustomizeButton from "@/components/FloatingCustomizeButton";
 import Index from "./pages/Index.tsx";
@@ -40,15 +41,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/goal-setup" element={<GoalSetup />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/chat/:matchId" element={<DirectChat />} />
-            <Route path="/group-chat" element={<GroupChat />} />
-            <Route path="/progress-wall" element={<ProgressWall />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/chats" element={<ChatList />} />
+            <Route path="/goal-setup" element={<ProtectedRoute><GoalSetup /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/chat/:matchId" element={<ProtectedRoute><DirectChat /></ProtectedRoute>} />
+            <Route path="/group-chat" element={<ProtectedRoute><GroupChat /></ProtectedRoute>} />
+            <Route path="/progress-wall" element={<ProtectedRoute><ProgressWall /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+            <Route path="/chats" element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
             <Route path="/u/:userId" element={<PublicProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

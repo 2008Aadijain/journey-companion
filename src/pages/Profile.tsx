@@ -86,7 +86,7 @@ const Profile = () => {
   const handleShare = async (badge: Achievement) => {
     const text = `I just earned the "${badge.badge_emoji} ${badge.badge_name}" badge on GoalCircle! ${badge.badge_description}. Join me at GoalCircle!`;
     if (navigator.share) {
-      try { await navigator.share({ title: "GoalCircle Achievement", text }); } catch {}
+      try { await navigator.share({ title: "GoalCircle Achievement", text }); } catch (error) { console.warn("Share failed", error); }
     } else {
       await navigator.clipboard.writeText(text);
     }
@@ -97,7 +97,7 @@ const Profile = () => {
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar.${ext}`;
-    await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    try { await supabase.storage.from("avatars").upload(path, file, { upsert: true }); } catch (error) { console.warn("Avatar upload failed", error); }
     const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
     await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user.id);
     setUploading(false);
@@ -239,7 +239,7 @@ const Profile = () => {
             onClick={async () => {
               const url = `${window.location.origin}/u/${user.id}`;
               if (navigator.share) {
-                try { await navigator.share({ title: `${profile.name} on GoalCircle`, url }); } catch {}
+                try { await navigator.share({ title: `${profile.name} on GoalCircle`, url }); } catch (error) { console.warn("Profile share failed", error); }
               } else {
                 await navigator.clipboard.writeText(url);
               }

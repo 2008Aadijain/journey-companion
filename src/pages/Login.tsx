@@ -26,10 +26,10 @@ const Login = () => {
 
   useEffect(() => {
     if (!loading && user && profile) {
-      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch (error) { console.warn("Failed to persist login flag", error); }
       navigate("/dashboard", { replace: true });
     } else if (!loading && user && !profile) {
-      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch (error) { console.warn("Failed to persist login flag", error); }
       navigate("/goal-setup", { replace: true });
     }
   }, [loading, user, profile, navigate]);
@@ -43,8 +43,10 @@ const Login = () => {
       toast({ title: "Login failed", description: friendlyError(error), variant: "destructive" });
       return;
     }
-    try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
+    try { localStorage.setItem("gm-has-logged-in", "1"); } catch (error) { console.warn("Failed to persist login flag", error); }
   };
+
+  const appUrl = import.meta.env.VITE_SUPABASE_REDIRECT_URL ?? window.location.origin;
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +62,7 @@ const Login = () => {
       return;
     }
     if (data.user) {
-      try { localStorage.setItem("gm-has-logged-in", "1"); } catch {}
+      try { localStorage.setItem("gm-has-logged-in", "1"); } catch (error) { console.warn("Failed to persist login flag", error); }
       navigate("/goal-setup");
     }
   };
@@ -68,7 +70,7 @@ const Login = () => {
   const handleGoogleAuth = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + "/dashboard" },
+      options: { redirectTo: `${appUrl}/dashboard` },
     });
     if (error) toast({ title: "Google login failed", description: friendlyError(error.message), variant: "destructive" });
   };
@@ -79,7 +81,7 @@ const Login = () => {
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
-      redirectTo: window.location.origin + "/reset-password",
+      redirectTo: `${appUrl}/reset-password`,
     });
     if (error) {
       toast({ title: "Failed", description: error.message, variant: "destructive" });

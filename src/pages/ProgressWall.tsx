@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, HandMetal, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,7 +44,7 @@ const ProgressWall = () => {
     if (!loading && !user) navigate("/goal-setup");
   }, [loading, user, navigate]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     let query = supabase.from("check_ins").select("*").order("created_at", { ascending: false }).limit(50);
     if (filter !== "All") query = query.eq("goal_category", filter);
     const { data } = await query;
@@ -67,7 +67,7 @@ const ProgressWall = () => {
 
     const { data: rxns } = await supabase.from("check_in_reactions").select("check_in_id, reaction_type, user_id");
     if (rxns) setReactions(rxns);
-  };
+  }, [filter]);
 
   useEffect(() => {
     if (!user) return;
@@ -77,7 +77,7 @@ const ProgressWall = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "check_ins" }, () => fetchData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, filter]);
+  }, [user, fetchData]);
 
   const getReactionCount = (checkInId: string, type: string) =>
     reactions.filter(r => r.check_in_id === checkInId && r.reaction_type === type).length;

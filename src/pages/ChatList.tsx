@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Users, UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,12 +41,7 @@ const ChatList = () => {
     if (!loading && !user) navigate("/goal-setup");
   }, [loading, user, navigate]);
 
-  useEffect(() => {
-    if (!user || !profile) return;
-    loadConversations();
-  }, [user, profile]);
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!user) return;
 
     // Load DM conversations
@@ -126,7 +121,7 @@ const ChatList = () => {
         lastTime: lastGroupMsg?.created_at || "",
       }]);
     }
-  };
+  }, [user, profile]);
 
   const timeAgo = (date: string) => {
     if (!date) return "";
