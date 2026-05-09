@@ -6,8 +6,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-4xl animate-pulse">🔐</div>
+      <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite" aria-label="Loading">
+        <div className="text-4xl animate-pulse" aria-hidden="true">🔐</div>
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }

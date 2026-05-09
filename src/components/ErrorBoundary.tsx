@@ -46,7 +46,10 @@ class ErrorBoundary extends Component<Props, State> {
                   Error details (development only)
                 </summary>
                 <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
+                  <strong>Message:</strong>
                   {this.state.error.message}
+                  <hr style={{ margin: '8px 0', borderColor: '#ccc' }} />
+                  <strong>Stack:</strong>
                   {this.state.error.stack}
                 </pre>
               </details>

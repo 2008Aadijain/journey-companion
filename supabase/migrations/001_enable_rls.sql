@@ -53,9 +53,9 @@ CREATE POLICY "Users can update received friend requests" ON friend_requests
 CREATE POLICY "Users can view own matches" ON matches
   FOR SELECT USING (auth.uid() = user1_id OR auth.uid() = user2_id);
 
--- Users can create matches (though this should be handled by application logic)
-CREATE POLICY "Users can create matches" ON matches
-  FOR INSERT WITH CHECK (auth.uid() = user1_id OR auth.uid() = user2_id);
+-- Only service role can create matches via application logic
+CREATE POLICY "Service creates matches" ON matches
+  FOR INSERT WITH CHECK (false);
 
 -- Direct messages policies
 -- Users can view messages in matches they are part of
@@ -79,9 +79,10 @@ CREATE POLICY "Users can send messages in own matches" ON direct_messages
     )
   );
 
--- Users can mark messages as read in matches they are part of
-CREATE POLICY "Users can update messages in own matches" ON direct_messages
+-- Recipients can mark messages as read (not senders)
+CREATE POLICY "Recipients can update messages in own matches" ON direct_messages
   FOR UPDATE USING (
+    auth.uid() != sender_id AND
     EXISTS (
       SELECT 1 FROM matches
       WHERE matches.id = direct_messages.match_id
@@ -123,9 +124,16 @@ CREATE POLICY "Users can view members of own groups" ON friend_group_members
     )
   );
 
--- Users can join groups (insert themselves as members)
-CREATE POLICY "Users can join groups" ON friend_group_members
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Group creators can add members to their groups
+CREATE POLICY "Group creators can add members" ON friend_group_members
+  FOR INSERT WITH CHECK (
+    auth.uid() = user_id AND
+    EXISTS (
+      SELECT 1 FROM friend_groups
+      WHERE friend_groups.id = friend_group_members.group_id
+      AND friend_groups.created_by = auth.uid()
+    )
+  );
 
 -- Group creators can manage members
 CREATE POLICY "Group creators can manage members" ON friend_group_members
@@ -143,7 +151,7 @@ CREATE POLICY "Users can view messages in own groups" ON group_messages
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM friend_group_members
-      WHERE friend_group_members.group_id = group_messages.id
+      WHERE friend_group_members.group_id = group_messages.group_id
       AND friend_group_members.user_id = auth.uid()
     )
   );
@@ -154,7 +162,7 @@ CREATE POLICY "Users can send messages to own groups" ON group_messages
     auth.uid() = sender_id AND
     EXISTS (
       SELECT 1 FROM friend_group_members
-      WHERE friend_group_members.group_id = group_messages.id
+      WHERE friend_group_members.group_id = group_messages.group_id
       AND friend_group_members.user_id = auth.uid()
     )
   );
@@ -194,9 +202,9 @@ CREATE POLICY "Users can delete own reactions" ON check_in_reactions
 CREATE POLICY "Achievements are viewable by everyone" ON achievements
   FOR SELECT USING (true);
 
--- Users can only have achievements created for them (by the system)
-CREATE POLICY "Users can have achievements created" ON achievements
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Only system/service role can create achievements
+CREATE POLICY "System creates achievements" ON achievements
+  FOR INSERT WITH CHECK (false);
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles(user_id);

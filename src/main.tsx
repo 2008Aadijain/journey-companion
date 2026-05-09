@@ -23,8 +23,9 @@ try {
         <p>Copy from .env.example and fill in your actual values.</p>
       </div>
     `;
-    throw error;
   }
+  // Always rethrow to prevent app loading with invalid config
+  throw error;
 }
 
 createRoot(document.getElementById("root")!).render(

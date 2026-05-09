@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [signingIn, setSigningIn] = useState(false);
   const [signingUp, setSigningUp] = useState(false);
 
-  const fetchProfile = useCallback(async (userId: string, retryCount = 0) => {
+  const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise<void> => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -55,8 +55,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) {
         if (error.code === 'PGRST116' && retryCount < 3) {
           // Profile not found, wait a bit and retry (for new signups)
-          setTimeout(() => fetchProfile(userId, retryCount + 1), 1000 * (retryCount + 1));
-          return;
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return fetchProfile(userId, retryCount + 1);
         }
         throw error;
       }
@@ -75,8 +75,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("Failed to fetch profile:", error);
       if (retryCount < 2) {
-        setTimeout(() => fetchProfile(userId, retryCount + 1), 2000);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return fetchProfile(userId, retryCount + 1);
       }
+      // Re-throw after final retry failure so callers know fetch failed
+      throw error;
     }
   }, []);
 
@@ -147,10 +150,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const expiresIn = expiresAt * 1000 - Date.now();
     const refreshBuffer = 5 * 60 * 1000; // 5 minutes before expiry
 
-    if (expiresIn > refreshBuffer) {
-      const timeoutId = setTimeout(refreshSession, expiresIn - refreshBuffer);
-      return () => clearTimeout(timeoutId);
+    if (expiresIn <= 0) {
+      // Session already expired, refresh immediately
+      refreshSession();
+      return;
     }
+
+    if (expiresIn <= refreshBuffer) {
+      // Session expires within buffer, refresh immediately
+      refreshSession();
+      return;
+    }
+
+    // Schedule refresh for later
+    const timeoutId = setTimeout(refreshSession, expiresIn - refreshBuffer);
+    return () => clearTimeout(timeoutId);
   }, [session, refreshSession]);
 
   const signUp = async (
@@ -174,9 +188,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error: null };
       }
 
-      // If wrong password for existing user
-      if (signInError && signInError.message !== "Invalid login credentials") {
-        return { error: signInError.message };
+      // Check for specific error conditions
+      if (signInError) {
+        // Status 400/422 typically means invalid credentials or validation error
+        // Check error code or status to determine the issue
+        const isInvalidCredentials = 
+          signInError.status === 400 || 
+          signInError.status === 401 ||
+          signInError.message?.includes("Invalid login credentials") ||
+          signInError.code === "invalid_credentials";
+        
+        if (!isInvalidCredentials) {
+          // Some other error (network, validation, etc)
+          return { error: signInError.message || "Sign in failed" };
+        }
+        // Invalid credentials - will try signup below
       }
 
       // Try signup
@@ -192,10 +218,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (error) {
-        if (error.message.includes("already registered")) {
+        // Check for user already exists errors
+        const userExists = 
+          error.status === 400 || 
+          error.message?.includes("already registered") ||
+          error.message?.includes("user already exists") ||
+          error.code === "user_already_exists";
+        
+        if (userExists) {
           return { error: "Account exists but password is incorrect. Try a different password." };
         }
-        return { error: error.message };
+        return { error: error.message || "Signup failed" };
       }
 
       if (!data.user) return { error: "Signup failed" };
